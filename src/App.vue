@@ -12,6 +12,9 @@ import Drones from './components/Drones.vue'
   </main>
 </template>
 
-<style scoped>
-
+<style>
+/* body .p-component-overlay {
+  background-color: rgba(255, 255, 0, 0.8);
+  opacity: 1;
+} */
 </style>

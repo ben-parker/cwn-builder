@@ -1,16 +1,15 @@
-<script async setup>
+<script setup>
 import { ref } from 'vue'
 import { useDroneStore } from '@/stores/drones'
 import Dropdown from 'primevue/dropdown'
 import Drone from '@/components/Drone.vue'
 
 const store = useDroneStore()
-const response = await fetch('/data/drones.json')
-store.drones = JSON.parse(await response.text())
-const selectedDrone = ref({})
-const droneList = ref([])
-const newDrone = (idx) => droneList.value.push(store.drones[idx])
+await store.loadDroneData()
 
+const droneList = ref([])
+
+const newDrone = (idx) => droneList.value.push(store.drones[idx])
 const money = (cost) => "$" + cost.toLocaleString("en-US")
 </script>
 

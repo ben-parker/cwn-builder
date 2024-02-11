@@ -1,18 +1,39 @@
 <script setup>
 import { ref } from 'vue'
+import { computed } from 'vue'
 import Dialog from 'primevue/dialog'
-import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
+import Badge from 'primevue/badge'
+import { useDroneStore } from '@/stores/drones'
 
+const store = useDroneStore()
 const props = defineProps(['index', 'drone'])
-const mods = ref([])
-let visible = ref(false)
+
+const searchText = ref('')
+const visible = ref(false)
+const fittings = ref([])
+const searchResults = computed(() => {
+    if (searchText.value.length < 2) {
+        return store.droneMods;
+    }
+
+    return store.droneMods.filter(m => 
+        m.name.toLowerCase().includes(searchText.value.toLowerCase()) 
+        || m.effect_text.toLowerCase().includes(searchText.value.toLowerCase()))
+})
+
+// const totalCost = computed(() => {
+//     if (fittings.value.length === 0) return props.drone.cost;
+//     return props.drone.cost + fittings.value.map(f => f.cost_multiplier * props.drone.cost).reduce((prev, cur) => prev + cur, 0)
+// })
 </script>
 
 <template>
     <div class="drone">
         <div class="drone-heading">
-            <h3>{{ drone.name }}</h3>
+            <div>
+                <h3>{{ drone.name }}</h3><span class="drone-cost"></span>
+            </div>
             <a class="remove" @click="$emit('removeDrone', index)">&#x274C;</a>
         </div>
         <table>
@@ -30,7 +51,7 @@ let visible = ref(false)
                     <td>{{ drone.ac }}</td>
                     <td>{{ drone.tt }}</td>
                     <td>{{ drone.hp }}</td>
-                    <td>{{ drone.fittings }}</td>
+                    <td>{{ fittings.length }} / {{ drone.fittings }}</td>
                     <td>{{ drone.move }}</td>
                     <td>{{ drone.hardpoints }}</td>
                     <td>{{ drone.encumbrance }}</td>
@@ -39,19 +60,14 @@ let visible = ref(false)
         </table>
         <a class="add-link" @click="visible = true">+ Add Mod/Fitting</a>
 
-        <Dialog v-model:visible="visible" modal header="Edit Profile" :style="{ width: '25rem' }">
-            <span class="p-text-secondary block mb-5">Update your information.</span>
-            <div class="flex align-items-center gap-3 mb-3">
-                <label for="username" class="font-semibold w-6rem">Username</label>
-                <InputText id="username" class="flex-auto" autocomplete="off" />
-            </div>
-            <div class="flex align-items-center gap-3 mb-5">
-                <label for="email" class="font-semibold w-6rem">Email</label>
-                <InputText id="Email" class="flex-auto" autocomplete="off" />
-            </div>
-            <div class="flex justify-content-end gap-2">
-                <Button type="button" label="Cancel" severity="secondary" @click="visible = false"></Button>
-                <Button type="button" label="Save" @click="visible = false"></Button>
+        <Dialog v-model:visible="visible" modal header="Modify Drone" :style="{ width: '25rem' }">
+            <InputText v-model="searchText"></InputText>
+            <div v-for="fitting in searchResults" class="mod-block">
+                <div>
+                    <h4>{{ fitting.name }}</h4><span class="mod-type">Fitting</span>
+                    <Badge :value="fitting.cost_multiplier" severity="secondary"></Badge>
+                </div>
+                <div><small>{{ fitting.effect_text }}</small></div>
             </div>
         </Dialog>
     </div>
@@ -77,5 +93,20 @@ a {
 }
 a.add-link {
     margin-left: 20px;
+}
+
+h3, h4 {
+    display: inline;
+    margin-right: 5px;
+}
+
+.mod-type {
+    font-size: 8px;
+    margin-left: 5px;
+    margin-right: 5px;  
+}
+
+.mod-block {
+    margin-bottom: 10px;
 }
 </style>
