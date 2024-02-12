@@ -13,10 +13,10 @@ export const useDroneStore = defineStore('drones', () => {
     drones.value = JSON.parse(await dronesResponse.text())
 
     const fittingsResponse = await fetch('/data/drone_fittings.json')
-    fittings.value = JSON.parse(await fittingsResponse.text())
+    fittings.value = JSON.parse(await fittingsResponse.text()).map(f => ({...f, type: "fitting" }))
 
     const modsResponse = await fetch('/data/drone_mods.json')
-    mods.value = JSON.parse(await modsResponse.text())
+    mods.value = JSON.parse(await modsResponse.text()).map(m => ({...m, type: "mod" }))
   } 
   
   return { drones, fittings, mods, loadDroneData, droneMods }

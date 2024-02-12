@@ -1,7 +1,6 @@
 <script setup>
 import { ref } from 'vue'
 import { useDroneStore } from '@/stores/drones'
-import Dropdown from 'primevue/dropdown'
 import Drone from '@/components/Drone.vue'
 
 const store = useDroneStore()
