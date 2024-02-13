@@ -525,7 +525,7 @@ const strippedFittings = {
     remove() {
         drone.extraMaxFittings += 1;
         if (parseInt(drone.encumbrance) && drone.extraEncumbrance < 0) {
-            drone.extraEncumbrance -= 1;
+            drone.extraEncumbrance -= -1;
         }
     }
 };
