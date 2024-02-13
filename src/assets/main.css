@@ -28,3 +28,9 @@ a,
 @media (min-width: 1024px) {
 
 }
+
+footer {
+  display: flex;
+  justify-content: center;
+  font-size: 8px;
+}

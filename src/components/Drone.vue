@@ -8,6 +8,7 @@ import { addFittingEffect, removeFittingEffect } from '@/services/fitting_effect
 
 const store = useDroneStore()
 const props = defineProps(['index', 'drone'])
+const emit = defineEmits(['updated'])
 
 const searchText = ref('')
 const visible = ref(false)
@@ -21,6 +22,8 @@ const removeMod = function(data) {
         removeFittingEffect(fittings.value[data.index].name, props.drone);
         fittings.value.splice(data.index, 1);
     }
+
+    emit('updated', { index: props.index, cost: totalCost.value });
 };
 
 const select = function(fitting) {
@@ -30,7 +33,10 @@ const select = function(fitting) {
     } else if (fitting.type === 'mod') {
         mods.value.push(fitting);
     }
+
+    emit('updated', { index: props.index, cost: totalCost.value });
 };
+
 const searchResults = computed(() => {
     if (searchText.value.length < 2) {
         return store.droneMods;
@@ -51,6 +57,8 @@ const totalCost = computed(() => {
 })
 
 const money = (cost) => "$" + cost.toLocaleString("en-US");
+
+defineExpose({ totalCost });
 </script>
 
 <template>
