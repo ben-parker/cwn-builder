@@ -23,18 +23,13 @@ const removeMod = function(data) {
     }
 };
 
-const removeFitting = function(index) {
-    removeFittingEffect(fittings.value[index].name);
-    fittings.value.splice(index, 1);
-};
-
 const select = function(fitting) {
     if (fitting.type === 'fitting') {
         fittings.value.push(fitting);
         addFittingEffect(fitting.name, props.drone);
-    }
-    else if (fitting.type === 'mod')
+    } else if (fitting.type === 'mod') {
         mods.value.push(fitting);
+    }
 };
 const searchResults = computed(() => {
     if (searchText.value.length < 2) {
@@ -106,10 +101,15 @@ const money = (cost) => "$" + cost.toLocaleString("en-US");
 th {
     font-weight: bold;
 }
+
 thead, tr {
     text-align: center;
 }
 
+table {
+    width: 100%;
+    table-layout: fixed;
+}
 .drone-heading {
     background-color: black;
     color: white;
@@ -132,5 +132,10 @@ h3, h4 {
 
 .unavailable {
     color: gray;
+}
+
+.drone {
+    width: 60%;
+    font-size: 10pt;
 }
 </style>
