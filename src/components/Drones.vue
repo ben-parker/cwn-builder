@@ -87,6 +87,7 @@ thead, td:nth-child(2) {
   flex-direction: row;
   flex-wrap: wrap;
   width: 100%;
+  margin-bottom: 2%;
 }
 
 .column {

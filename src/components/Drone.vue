@@ -1,10 +1,10 @@
 <script setup>
-import { ref, reactive, computed } from 'vue'
+import { ref, computed } from 'vue'
 import Dialog from 'primevue/dialog'
 import InputText from 'primevue/inputtext'
 import ModBlock from '@/components/ModBlock.vue'
 import { useDroneStore } from '@/stores/drones'
-import { addFittingEffect, removeFittingEffect } from '@/services/fitting_effects'
+import { addModEffect, removeModEffect } from '@/services/fitting_effects'
 
 const store = useDroneStore()
 const props = defineProps(['index', 'drone'])
@@ -12,30 +12,41 @@ const emit = defineEmits(['updated'])
 
 const searchText = ref('')
 const visible = ref(false)
-const fittings = ref([])
 const mods = ref([])
 
 const removeMod = function(data) {
-    if (data.type === 'mod') {
-        mods.value.splice(data.index, 1);
-    } else if (data.type === 'fitting') {
-        removeFittingEffect(fittings.value[data.index].name, props.drone);
-        fittings.value.splice(data.index, 1);
-    }
-
+    removeModEffect(mods.value[data.index], props.drone);
+    mods.value.splice(data.index, 1);
     emit('updated', { index: props.index, cost: totalCost.value });
 };
 
 const select = function(fitting) {
-    if (fitting.type === 'fitting') {
-        fittings.value.push(fitting);
-        addFittingEffect(fitting.name, props.drone);
-    } else if (fitting.type === 'mod') {
-        mods.value.push(fitting);
-    }
-
+    addModEffect(fitting, props.drone);
+    mods.value.push(fitting);
     emit('updated', { index: props.index, cost: totalCost.value });
 };
+
+const money = (cost) => "$" + cost.toLocaleString("en-US");
+const modifiedMove = (move, modifier) => {
+    const re = /^(\d+)(m \w+)$/;
+    const matches = re.exec(move);
+
+    if (matches === null || matches.length !== 3) {
+        return move;
+    }
+
+    const moveValue = parseInt(matches[1]);
+    if (!moveValue) return move;
+
+    return ((moveValue + modifier) + matches[2]);
+};
+
+// Computed
+const addedMods = computed(() => mods.value.filter(m => m.type === 'mod'));
+const addedFittings = computed(() => mods.value.filter(m => m.type === 'fitting'));
+const tooManyFittings = computed(() => 
+    (addedFittings.value.length + props.drone.extraFittings ?? 0) 
+    > (props.drone.fittings + (props.drone.extraMaxFittings ?? 0)));
 
 const searchResults = computed(() => {
     if (searchText.value.length < 2) {
@@ -48,17 +59,14 @@ const searchResults = computed(() => {
 });
 
 const totalCost = computed(() => {
-    if (fittings.value.length === 0)
+    if (mods.value.length === 0)
         return props.drone.cost;
 
-    const modCosts = [...fittings.value, ...mods.value]
-        .reduce((prev, cur) => prev + (props.drone.cost * cur.cost_multiplier),  0);
+    const modCosts = mods.value.reduce((prev, cur) => 
+        prev + (props.drone.cost * cur.cost_multiplier),  0);
+
     return props.drone.cost + modCosts;
 })
-
-const money = (cost) => "$" + cost.toLocaleString("en-US");
-
-defineExpose({ totalCost });
 </script>
 
 <template>
@@ -84,21 +92,23 @@ defineExpose({ totalCost });
                     <td>{{ drone.ac }}<span v-if="drone.extraAc ?? 0 > 0">({{ drone.ac + drone.extraAc }})</span></td>
                     <td>{{ drone.tt }}</td>
                     <td>{{ drone.hp }}<span v-if="drone.extraHp ?? 0 > 0">({{ drone.hp + drone.extraHp }})</span></td>
-                    <td>{{ fittings.length + (drone.extraFittings ?? 0) }} / {{ drone.fittings }}</td>
-                    <td>{{ drone.move }}</td>
-                    <td>{{ drone.hardpoints }}</td>
-                    <td v-if="parseInt(drone.encumbrance)">{{ drone.encumbrance + (drone.extraEncumbrance ?? 0)}}</td>
+                    <td :class="{error: tooManyFittings}">{{ addedFittings.length + (drone.extraFittings ?? 0) }} / {{ drone.fittings + (drone.extraMaxFittings ?? 0)}}</td>
+                    <td>{{ modifiedMove(drone.move, drone.extraMove ?? 0) }}</td>
+                    <td>{{ drone.hardpoints + (drone.extraHardpoints ?? 0) }}</td>
+                    <td v-if="parseInt(drone.encumbrance)">{{ drone.encumbrance }}<span v-if="drone.extraEncumbrance ?? 0 !== 0">({{ drone.encumbrance + drone.extraEncumbrance }})</span></td>
                     <td v-else="parseInt(drone.encumbrance)">{{ drone.encumbrance }}</td>
                 </tr>
             </tbody>
         </table>
         <ModBlock class="indented mod-block" v-for="(mod, index) in mods" @remove-mod="removeMod" :fitting="mod" :drone="drone" removable="true" :index="index" />
-        <ModBlock class="indented mod-block" v-for="(fitting, index) in fittings" @remove-mod="removeMod" :fitting="fitting" :drone="drone"  removable="true" :index="index"/>
         <a class="indented clickable" @click="visible = true">+ Add Mod/Fitting</a>
 
         <Dialog v-model:visible="visible" modal header="Modify Drone" :style="{ width: '60%' }">
             <div style="display: flex; justify-content: flex-end;">
-                <InputText v-model="searchText"></InputText>
+                <div>
+                    <label for="mod-search">Search</label>
+                    <InputText v-model="searchText" id="mod-search"></InputText>
+                </div>               
             </div>
             <ModBlock v-for="fitting in searchResults" class="mod-block clickable" @click="select(fitting)" :drone="drone" :fitting="fitting" />
         </Dialog>
@@ -117,6 +127,7 @@ thead, tr {
 table {
     width: 100%;
     table-layout: fixed;
+    margin-bottom: 1%;
 }
 .drone-heading {
     background-color: black;
@@ -144,6 +155,14 @@ h3, h4 {
 
 .drone {
     width: 60%;
-    font-size: 10pt;
+    font-size: 0.8em;
+}
+
+div.p-dialog label {
+    display: block;
+}
+
+.error {
+    color: red;
 }
 </style>
