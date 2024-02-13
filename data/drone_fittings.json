@@ -1,0 +1,152 @@
+[
+    {
+      "name": "Ablative Code Buffer",
+      "cost_multiplier": 0.1,
+      "effect_text": "The drone automatically succeeds on the first opposed skill check made against a hostile hacker in a given scene."
+    },
+    {
+      "name": "Altitude Boost Unit",
+      "cost_multiplier": 0.1,
+      "effect_text": "This unit increases a flying drone’s maximum altitude to 5,000 meters, making most effectively invisible to ordinary sight."
+    },
+    {
+      "name": "Ammo Caddy",
+      "cost_multiplier": 0.1,
+      "effect_text": "This drone can hold up to 6 fullyloaded magazines in quick-release clips that can be grabbed as On Turn actions by an ally."
+    },
+    {
+      "name": "Ammo Supply",
+      "cost_multiplier": 0.1,
+      "effect_text": "Two full magazines are added to onemounted weapon’s allotment, or one magazineto two weapons."
+    },
+    {
+      "name": "Assisted Boost Burner",
+      "cost_multiplier": 0.1,
+      "effect_text": "When activated as a Move action, the burnerlaunches the drone up to 500 meters in a straightline.  Solid obstacles in front of thedrone will suffer half the drone’s HP in damageand inflict all of theirs on the drone. The burnerfunctions only once before it require a scene toregenerate its charge."
+    },
+    {
+      "name": "Cargo Space",
+      "cost_multiplier": 0.2,
+      "effect_text": "Carry up to 3 points of Encumbrance now, butthe drone’s own Encumbrance value is increasedby one.  Carried cargo is sealedwithin the drone and requires a Main Action todig out."
+    },
+    {
+      "name": "Command Deck/Follow",
+      "cost_multiplier": 0.1,
+      "effect_text": "As aMain Action, the drone can be ordered to followa particular visible target at a given distance ateither half or full speed."
+    },
+    {
+      "name": "Command Deck/Kill",
+      "cost_multiplier": 0.25,
+      "effect_text": "As a Main Action, itcan be ordered to kill one specific visible target."
+    },
+    {
+      "name": "Command Deck/Patrol",
+      "cost_multiplier": 0.1,
+      "effect_text": "As a Main Action, the dronecan be ordered to autonomously move to one ormore waypoints on whatever schedule the pilotwishes."
+    },
+    {
+      "name": "Command Deck/Watch",
+      "cost_multiplier": 0.1,
+      "effect_text": "The drone is equipped tomonitor its surroundings autonomously and alertits pilot when something of interest is noticed."
+    },
+    {
+      "name": "Emergency Evac Litter",
+      "cost_multiplier": 0.25,
+      "effect_text": "The drone isequipped with a retractable litter that can fit onehuman patient, along with manipulators sufficient to get a prone victim onto the litter witha Main Action."
+    },
+    {
+      "name": "Emissions Shielding",
+      "cost_multiplier": 0.2,
+      "effect_text": "Skill checks to spot it with such sensorssuffer a 2 penalty."
+    },
+    {
+      "name": "Enhanced Structure",
+      "cost_multiplier": 0.25,
+      "effect_text": "The drone’s maximum hit pointsincrease by 25% of its unmodified base, roundedup."
+    },
+    {
+      "name": "Extended Range",
+      "cost_multiplier": 0.25,
+      "effect_text": "The drone can now operate for twohours on a full battery charge."
+    },
+    {
+      "name": "Glider Grips",
+      "cost_multiplier": 0.2,
+      "effect_text": "As a Main Action, a user can leap off a highplace after grabbing the drone and descend safelyto the ground at a distance as far from the initialpoint as that point was above the ground."
+    },
+    {
+      "name": "Improved Armor",
+      "cost_multiplier": 0.25,
+      "effect_text": "The drone’s AC improves by 2, toa maximum of 18, but its Encumbrance ratingincreases by one."
+    },
+    {
+      "name": "Improved Targeting Logic",
+      "cost_multiplier": 0.2,
+      "effect_text": "The drone’s attack gains a hitbonus equal to the pilot’s Drive or Program skilllevel when firing autonomously; no bonus is given if the pilot is in direct control."
+    },
+    {
+      "name": "Laser Comms",
+      "cost_multiplier": 0.1,
+      "effect_text": "This fitting provides both a set of uni versal transceiver plugins and a laser comm hubfor the drone. Provided the PCs are in line of sightof the drone, normal radiowave based commscan be switched to lasers, providing uncrackable,electromagneticallyinaudible communicationswithin the group. Radio comms can still be usedas needed."
+    },
+    {
+      "name": "Manipulator Tendrils",
+      "cost_multiplier": 0.2,
+      "effect_text": "One set of manipulators is added to the drone, whether a mechanical claw, anarticulated metal tendril, or some other device.  Itcan function as a single human hand with an effective Strength of 12, but it cannot effectivelybe used for an attack or to lift anything heavierthan the drone itself."
+    },
+    {
+      "name": "Memory Banks",
+      "cost_multiplier": 0.1,
+      "effect_text": "The drone has two units of cyberdeckMemory added to it."
+    },
+    {
+      "name": "No Touch Web",
+      "cost_multiplier": 0.1,
+      "effect_text": "Until disarmed, any attemptto grab or pick up the drone automatically inflicts2d6 nonlethal electrical damage on the grabber."
+    },
+    {
+      "name": "Sleep Mode",
+      "cost_multiplier": 0.1,
+      "effect_text": "While in sleep mode, a drone cannot fly,move, or perform actions, but it will continueto communicate with the pilot and observe itssurroundings."
+    },
+    {
+      "name": "Stealth Package",
+      "cost_multiplier": 0.25,
+      "effect_text": "This fitting adds color-changing dronesheathing, noise damping, and thermal sealing tothe unit."
+    },
+    {
+      "name": "Suicide Charge",
+      "cost_multiplier": 0.25,
+      "effect_text": "With a Main Action command to detonate, the drone will explode, doing 3d6 damageto anyone within ten meters, with an Evasionsave for half."
+    },
+    {
+      "name": "Telescopic Optics",
+      "cost_multiplier": 0.2,
+      "effect_text": "The drone can focus on objects upto one kilometer away with a visual acuity sufficient to read a newspaper. Integral lowlightsensors allow it to see in all but total darkness."
+    },
+    {
+      "name": "Thermal Optics",
+      "cost_multiplier": 0.2,
+      "effect_text": "The drone is equipped with IR opticsthat can see heat patterns."
+    },
+    {
+      "name": "Trauma Response Suite",
+      "cost_multiplier": 0.25,
+      "effect_text": "An array of injectors, scalpels, sutures, and trauma chems are built into thedrone, allowing it to function as a medkit andmake Heal skill checks for a medicallycompetentpilot or an onsite doc in need of a kit."
+    },
+    {
+      "name": "Voice Broadcast",
+      "cost_multiplier": 0.1,
+      "effect_text": "The pilot can speak through thedrone or cause it to emit other noises at a volumeloud enough to be heard clearly a hundred metersaway."
+    },
+    {
+      "name": "Wallcrawler",
+      "cost_multiplier": 0.2,
+      "effect_text": "This fitting allows the drone toclimb sheer surfaces at its normal movement rate,assuming the surface is sturdy enough to bear itsweight."
+    },
+    {
+      "name": "Weapon Hardpoint",
+      "cost_multiplier": 0.25,
+      "effect_text": "Drones that are not factoryequipped with weapon hardpoints can haveone worked in as an aftermarket addition."
+    }
+  ]
