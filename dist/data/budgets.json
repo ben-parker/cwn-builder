@@ -1,0 +1,42 @@
+{
+    "1": {
+      "vehicle_budget": 5000,
+      "drone_budget": 1000
+    },
+    "2": {
+      "vehicle_budget": 10000,
+      "drone_budget": 5000
+    },
+    "3": {
+      "vehicle_budget": 15000,
+      "drone_budget": 10000
+    },
+    "4": {
+      "vehicle_budget": 20000,
+      "drone_budget": 15000
+    },
+    "5": {
+      "vehicle_budget": 30000,
+      "drone_budget": 20000
+    },
+    "6": {
+      "vehicle_budget": 40000,
+      "drone_budget": 25000
+    },
+    "7": {
+      "vehicle_budget": 60000,
+      "drone_budget": 35000
+    },
+    "8": {
+      "vehicle_budget": 80000,
+      "drone_budget": 45000
+    },
+    "9": {
+      "vehicle_budget": 100000,
+      "drone_budget": 60000
+    },
+    "10": {
+      "vehicle_budget": 200000,
+      "drone_budget": 80000
+    }
+  }

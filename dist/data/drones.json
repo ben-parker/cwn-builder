@@ -1,0 +1,101 @@
+[
+    {
+      "name": "Shintetsu Mouse",
+      "cost": 500,
+      "ac": 13,
+      "tt": 6,
+      "hp": 1,
+      "fittings": 0,
+      "move": "5m ground",
+      "hardpoints": 0,
+      "encumbrance": 1
+    },
+    {
+      "name": "BanTech Roach",
+      "cost": 1000,
+      "ac": 13,
+      "tt": 6,
+      "hp": 8,
+      "fittings": 3,
+      "move": "10m ground",
+      "hardpoints": 0,
+      "encumbrance": 3
+    },
+    {
+      "name": "Sui Hummingbird",
+      "cost": 2000,
+      "ac": 15,
+      "tt": 6,
+      "hp": 5,
+      "fittings": 2,
+      "move": "10m fly",
+      "hardpoints": 0,
+      "encumbrance": 3
+    },
+    {
+      "name": "BanTech Sunfish",
+      "cost": 1000,
+      "ac": 15,
+      "tt": 6,
+      "hp": 8,
+      "fittings": 3,
+      "move": "10m swim",
+      "hardpoints": 0,
+      "encumbrance": 3
+    },
+    {
+      "name": "Lem Robotics Pitbull",
+      "cost": 5000,
+      "ac": 15,
+      "tt": 8,
+      "hp": 15,
+      "fittings": 5,
+      "move": "20m ground",
+      "hardpoints": 1,
+      "encumbrance": 5
+    },
+    {
+      "name": "NAMU Javelin",
+      "cost": 10000,
+      "ac": 16,
+      "tt": 6,
+      "hp": 12,
+      "fittings": 5,
+      "move": "20m fly",
+      "hardpoints": 1,
+      "encumbrance": 6
+    },
+    {
+      "name": "Kessler Kerberos",
+      "cost": 15000,
+      "ac": 18,
+      "tt": 8,
+      "hp": 25,
+      "fittings": 6,
+      "move": "20m ground",
+      "hardpoints": 3,
+      "encumbrance": "-"
+    },
+    {
+      "name": "Sui Kraken",
+      "cost": 10000,
+      "ac": 16,
+      "tt": 8,
+      "hp": 20,
+      "fittings": 5,
+      "move": "15m swim",
+      "hardpoints": 2,
+      "encumbrance": "-"
+    },
+    {
+      "name": "NAMU Shrike",
+      "cost": 25000,
+      "ac": 18,
+      "tt": 8,
+      "hp": 20,
+      "fittings": 6,
+      "move": "30m fly",
+      "hardpoints": 2,
+      "encumbrance": "-"
+    }
+  ]

@@ -1,0 +1,58 @@
+[
+    {
+      "name": "Additional Fitting",
+      "effect_text": "Careful optimization of power lines and chassis reinforcement allows for adding an additional fitting to the drone.",
+      "fix": 1,
+      "drive": 1,
+      "cost_multiplier": 0.5
+    },
+    {
+      "name": "Additional Hardpoint",
+      "effect_text": "This mod adds one point of Encumbrance to portable drones, though this doesn’t affect their maximum weapon size.",
+      "fix": 1,
+      "drive": 1,
+      "cost_multiplier": 0.5
+    },
+    {
+      "name": "Battery Swapping",
+      "effect_text": "Replacing proprietary battery systems with off-the-shelf models allows man-portable drones to have their battery swapped with a minute of work.",
+      "fix": 1,
+      "drive": 1,
+      "cost_multiplier": 0.1
+    },
+    {
+      "name": "Boosted Engine",
+      "effect_text": "The drone’s engines are tuned to optimize speed, increasing its Move rate by 10m.",
+      "fix": 1,
+      "drive": 2,
+      "cost_multiplier": 0.25
+    },
+    {
+      "name": "Heavy Plating",
+      "effect_text": "Strategic armor reinforcement improves its base AC by 2, but decreases its Move rate by 5m. It also increases its effective Encumbrance by 1 if it’s man-portable.",
+      "fix": 1,
+      "drive": 2,
+      "cost_multiplier": 0.25
+    },
+    {
+      "name": "Quick Launch",
+      "effect_text": "A packed man-portable drone is modified to deploy itself as an On Turn action by its controller instead of a Main Action, even if it’s currently Stowed.",
+      "fix": 1,
+      "drive": 2,
+      "cost_multiplier": 0.1
+    },
+    {
+      "name": "Redundant Systems",
+      "effect_text": "Careful duplication of critical systems increases the drone’s hit points by 25% of its unmodified base score, rounded up. The extra mass increases the Encumbrance of man-portable drones by 1.",
+      "fix": 2,
+      "drive": 2,
+      "cost_multiplier": 0.5
+    },
+    {
+      "name": "Stripped Fittings",
+      "effect_text": "The drone’s maximum fitting total is decreased by 1 and its Encumbrance rating is reduced by 1, to a minimum of 1.",
+      "fix": 2,
+      "drive": 1,
+      "cost_multiplier": 0.1
+    }
+  ]
