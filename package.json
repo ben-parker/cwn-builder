@@ -2,9 +2,11 @@
   "name": "cwn-builder",
   "version": "0.0.0",
   "private": true,
+  "homepage": "https://ben-parker.github.io/cwn-builder/",
   "type": "module",
   "scripts": {
-    "deploy": "npm run build && git subtree push --prefix dist origin gh-pages",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d dist",
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview"
@@ -16,6 +18,7 @@
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.0.3",
+    "gh-pages": "^6.1.1",
     "vite": "^5.0.11"
   }
 }
