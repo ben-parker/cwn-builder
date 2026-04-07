@@ -1,0 +1,106 @@
+[
+  {
+    "name": "Augmented Armor",
+    "fix": 3,
+    "drive": 1,
+    "cost_multiplier": 0.25,
+    "special_components": 1,
+    "effect_text": "Increase the vehicle's Armor rating by 3 points."
+  },
+  {
+    "name": "Drone Hub",
+    "fix": 1,
+    "drive": 0,
+    "cost_multiplier": 0.1,
+    "special_components": 0,
+    "effect_text": "Install a housing that can hold a portable drone on Small vehicles or a non-portable drone on Medium or larger vehicles. The drone can be deployed while the vehicle is in motion. Onboard signal encryption adds +2 to the difficulty of hacking any drone controlled by someone in or adjacent to this vehicle. This mod can be installed twice on Large vehicles."
+  },
+  {
+    "name": "Extra Seating",
+    "fix": 0,
+    "drive": 1,
+    "cost_multiplier": 0.1,
+    "special_components": 0,
+    "effect_text": "Increase the maximum Crew size by 1 for Small vehicles, 2 for Medium, and 4 for Large."
+  },
+  {
+    "name": "Integrated Magazines",
+    "fix": 1,
+    "drive": 0,
+    "cost_multiplier": 0.1,
+    "special_components": 0,
+    "effect_text": "Mounted weapons gain one extra built-in magazine for Small vehicles, two for Medium, or four for Large. Reloading one vehicle magazine takes a Main Action."
+  },
+  {
+    "name": "Personalized Controls",
+    "fix": 1,
+    "drive": 2,
+    "cost_multiplier": 0.2,
+    "special_components": 0,
+    "effect_text": "The vehicle's controls are designed for the idiosyncrasies of a specific driver. Once per scene, as an Instant action, they can add +1 to a Drive skill check. Anyone else takes -1 to drive the vehicle."
+  },
+  {
+    "name": "Power System Upgrade",
+    "fix": 2,
+    "drive": 2,
+    "cost_multiplier": 0.25,
+    "special_components": 1,
+    "effect_text": "Increase the Power rating of the vehicle by 2 points for Small vehicles, 3 for Medium, and 4 for Large."
+  },
+  {
+    "name": "Q-Cladding",
+    "fix": 1,
+    "drive": 2,
+    "cost_multiplier": 0.2,
+    "special_components": 0,
+    "effect_text": "Disguise the vehicle as another vehicle of the same general type, and hide its mounted weaponry. Replacing the disguise after weapons are deployed takes five minutes."
+  },
+  {
+    "name": "Reactive Defenses",
+    "fix": 2,
+    "drive": 2,
+    "cost_multiplier": 0.25,
+    "special_components": 1,
+    "effect_text": "Increase the vehicle's Armor Class by 2 points, but subtract 2 points from its Armor, if it has any."
+  },
+  {
+    "name": "Reinforced Chassis",
+    "fix": 2,
+    "drive": 1,
+    "cost_multiplier": 0.25,
+    "special_components": 1,
+    "effect_text": "Increase the vehicle's maximum HP by 25% of its base, but subtract 2 Mass from its maximum."
+  },
+  {
+    "name": "Remote Sensors",
+    "fix": 1,
+    "drive": 0,
+    "cost_multiplier": 0.1,
+    "special_components": 0,
+    "effect_text": "The driver's smartphone or headware can tap the vehicle's sensors as an On Turn action, getting audio and visual from it if no special sensors are installed. This signal can reach up to two kilometers."
+  },
+  {
+    "name": "Supplementary Tanks",
+    "fix": 0,
+    "drive": 1,
+    "cost_multiplier": 0.1,
+    "special_components": 0,
+    "effect_text": "The vehicle can operate for up to three days of normal driving without refueling."
+  },
+  {
+    "name": "Ultralight Components",
+    "fix": 2,
+    "drive": 1,
+    "cost_multiplier": 0.2,
+    "special_components": 1,
+    "effect_text": "Increase the vehicle's maximum Mass by 2 points for Small vehicles, 3 for Medium, or 4 for Large. Its maximum HP decreases by 20% of its base, rounded up."
+  },
+  {
+    "name": "Upgraded Speed",
+    "fix": 2,
+    "drive": 3,
+    "cost_multiplier": 0.25,
+    "special_components": 2,
+    "effect_text": "Increase the vehicle's Speed by 1, but lose 20% of its maximum Mass, rounded up."
+  }
+]
