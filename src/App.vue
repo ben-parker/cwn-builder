@@ -1,5 +1,6 @@
 <script setup>
-import { defineAsyncComponent, shallowRef } from 'vue'
+import { defineAsyncComponent, shallowRef, provide, ref } from 'vue'
+import { hasShareHash, readShareState, clearShareHash } from '@/services/share'
 
 const tools = [
   { id: 'drones', label: 'Drones', component: defineAsyncComponent(() => import('./components/Drones.vue')) },
@@ -7,6 +8,19 @@ const tools = [
 ]
 
 const activeTool = shallowRef(tools[0])
+const sharedState = ref(null)
+provide('sharedState', sharedState)
+
+// Check hash synchronously (no lz-string import needed), then decode async and provide to children
+if (hasShareHash()) {
+  readShareState().then(state => {
+    if (state) {
+      const matchedTool = tools.find(t => t.id === state.t)
+      if (matchedTool) activeTool.value = matchedTool
+      sharedState.value = state
+    }
+  })
+}
 </script>
 
 <template>

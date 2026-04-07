@@ -1,8 +1,9 @@
 <script setup>
-import { ref, computed, nextTick, watch, onMounted, onUnmounted, toRaw } from 'vue'
+import { ref, computed, nextTick, watch, onMounted, onUnmounted, toRaw, inject } from 'vue'
 import { useVehicleStore } from '@/stores/vehicles'
 import { useWeaponStore } from '@/stores/weapons'
 import Vehicle from '@/components/Vehicle.vue'
+import { buildShareUrl, clearShareHash } from '@/services/share'
 
 const store = useVehicleStore()
 const weaponStore = useWeaponStore()
@@ -14,6 +15,8 @@ const selectedIndex = ref(null)
 const tableRef = ref(null)
 const arrowTop = ref(0)
 let nextVehicleId = 0
+const vehicleRefs = {}
+const shareCopied = ref('')
 
 const updateArrowPosition = () => {
     if (selectedIndex.value === null || !tableRef.value) return;
@@ -29,9 +32,12 @@ watch(selectedIndex, () => {
     nextTick(updateArrowPosition);
 });
 
-const newVehicle = (idx) => {
-    vehicleList.value.push({ ...structuredClone(toRaw(store.vehicles[idx])), _uid: nextVehicleId++ });
-    costs.value.push(store.vehicles[idx].cost);
+const newVehicle = (idx, initialMods, initialWeapons) => {
+    const vehicle = { ...structuredClone(toRaw(store.vehicles[idx])), _uid: nextVehicleId++ }
+    if (initialMods) vehicle._initialMods = initialMods
+    if (initialWeapons) vehicle._initialWeapons = initialWeapons
+    vehicleList.value.push(vehicle)
+    costs.value.push(store.vehicles[idx].cost)
 };
 
 const browseRef = ref(null)
@@ -78,6 +84,49 @@ const armorDisplay = (vehicle) => {
     if (typeof vehicle.armor === 'string') return vehicle.armor
     return vehicle.armor
 }
+
+const shareHandler = async () => {
+    const units = vehicleList.value.map(vehicle => {
+        const ref = vehicleRefs[vehicle._uid]
+        return {
+            name: vehicle.name,
+            mods: ref?.mods?.map(m => m.name) ?? [],
+            weapons: ref?.weapons?.map(w => w.name) ?? [],
+        }
+    })
+    const payload = { v: 1, t: 'vehicles', units }
+    if (store.characterLevel != null) payload.lvl = store.characterLevel
+    if (store.hasAceDriverFocus) payload.focus = true
+    const copied = await buildShareUrl(payload)
+    shareCopied.value = copied ? 'Copied!' : 'Link ready'
+    setTimeout(() => { shareCopied.value = '' }, 2000)
+}
+
+// Restore from shared state provided by App.vue
+const sharedState = inject('sharedState')
+const restoreFromShare = (shared) => {
+    if (shared?.t !== 'vehicles') return
+    if (shared.lvl != null) setLevel(shared.lvl)
+    if (shared.focus) store.hasAceDriverFocus = true
+    for (const unit of shared.units ?? []) {
+        const idx = store.vehicles.findIndex(v => v.name === unit.name)
+        if (idx !== -1) newVehicle(idx, unit.mods, unit.weapons)
+    }
+    clearShareHash()
+}
+
+if (sharedState.value?.t === 'vehicles') {
+    restoreFromShare(sharedState.value)
+    sharedState.value = null
+} else {
+    const unwatch = watch(sharedState, (val) => {
+        if (val?.t === 'vehicles') {
+            restoreFromShare(val)
+            sharedState.value = null
+            unwatch()
+        }
+    })
+}
 </script>
 
 <template>
@@ -121,6 +170,11 @@ const armorDisplay = (vehicle) => {
                     <span>Ace Driver</span>
                 </label>
             </div>
+
+            <button class="share-btn" @click="shareHandler" :disabled="vehicleList.length === 0" :title="shareCopied || 'Share build'">
+                <svg v-if="!shareCopied" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+                <svg v-else xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            </button>
         </div>
 
         <div class="browse-section" ref="browseRef">
@@ -234,10 +288,13 @@ const armorDisplay = (vehicle) => {
         <div class="vehicle-cards">
             <Vehicle v-for="(vehicle, index) in vehicleList"
                 :key="vehicle._uid"
+                :ref="el => { if (el) vehicleRefs[vehicle._uid] = el; else delete vehicleRefs[vehicle._uid] }"
                 :index="index"
                 @remove-vehicle="(idx) => { vehicleList.splice(idx, 1); costs.splice(idx, 1); }"
                 @updated="(data) => costs[data.index] = data.cost"
                 :vehicle="vehicleList[index]"
+                :initialMods="vehicle._initialMods"
+                :initialWeapons="vehicle._initialWeapons"
             />
         </div>
     </div>
@@ -254,14 +311,14 @@ const armorDisplay = (vehicle) => {
 .total-cost-bar {
     display: flex;
     align-items: center;
-    justify-content: center;
     gap: 24px;
     padding: 10px 20px;
     margin-bottom: 1.5rem;
     background: var(--cwn-bg-soft);
     border: 1px solid var(--cwn-border);
     border-radius: 4px;
-    flex-wrap: wrap;
+    white-space: nowrap;
+    min-width: fit-content;
 }
 
 .cost-section {
@@ -555,6 +612,31 @@ tbody tr.row-selected {
     font-size: 0.8em;
     color: var(--cwn-text-muted);
     font-style: italic;
+}
+
+/* Share button */
+.share-btn {
+    margin-left: auto;
+    padding: 5px;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 3px;
+    color: var(--cwn-text-muted);
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+}
+
+.share-btn:hover:not(:disabled) {
+    color: var(--cwn-yellow);
+    border-color: var(--cwn-yellow-dim);
+    box-shadow: var(--cwn-glow-yellow);
+}
+
+.share-btn:disabled {
+    opacity: 0.3;
+    cursor: default;
 }
 
 /* Vehicle cards - flex wrap layout */

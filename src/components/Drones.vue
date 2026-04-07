@@ -1,8 +1,9 @@
 <script setup>
-import { ref, computed, nextTick, watch, onMounted, onUnmounted, toRaw } from 'vue'
+import { ref, computed, nextTick, watch, onMounted, onUnmounted, toRaw, inject } from 'vue'
 import { useDroneStore } from '@/stores/drones'
 import { useWeaponStore } from '@/stores/weapons'
 import Drone from '@/components/Drone.vue'
+import { buildShareUrl, clearShareHash } from '@/services/share'
 
 const store = useDroneStore()
 const weaponStore = useWeaponStore()
@@ -14,6 +15,8 @@ const selectedIndex = ref(null)
 const tableRef = ref(null)
 const arrowTop = ref(0)
 let nextDroneId = 0
+const droneRefs = {}
+const shareCopied = ref('')
 
 const updateArrowPosition = () => {
     if (selectedIndex.value === null || !tableRef.value) return;
@@ -29,9 +32,12 @@ watch(selectedIndex, () => {
     nextTick(updateArrowPosition);
 });
 
-const newDrone = (idx) => {
-    droneList.value.push({ ...structuredClone(toRaw(store.drones[idx])), _uid: nextDroneId++ });
-    costs.value.push(store.drones[idx].cost);
+const newDrone = (idx, initialMods, initialWeapons) => {
+    const drone = { ...structuredClone(toRaw(store.drones[idx])), _uid: nextDroneId++ }
+    if (initialMods) drone._initialMods = initialMods
+    if (initialWeapons) drone._initialWeapons = initialWeapons
+    droneList.value.push(drone)
+    costs.value.push(store.drones[idx].cost)
 };
 
 const browseRef = ref(null)
@@ -94,6 +100,50 @@ const moveType = (drone) => {
     if (drone.move.includes('swim')) return 'Aquatic';
     return 'Ground';
 };
+
+const shareHandler = async () => {
+    const units = droneList.value.map(drone => {
+        const ref = droneRefs[drone._uid]
+        return {
+            name: drone.name,
+            mods: ref?.mods?.map(m => m.name) ?? [],
+            weapons: ref?.weapons?.map(w => w.name) ?? [],
+        }
+    })
+    const payload = { v: 1, t: 'drones', units }
+    if (store.characterLevel != null) payload.lvl = store.characterLevel
+    if (store.hasDronePilotFocus) payload.focus = true
+    const copied = await buildShareUrl(payload)
+    shareCopied.value = copied ? 'Copied!' : 'Link ready'
+    setTimeout(() => { shareCopied.value = '' }, 2000)
+}
+
+// Restore from shared state provided by App.vue
+const sharedState = inject('sharedState')
+const restoreFromShare = (shared) => {
+    if (shared?.t !== 'drones') return
+    if (shared.lvl != null) setLevel(shared.lvl)
+    if (shared.focus) store.hasDronePilotFocus = true
+    for (const unit of shared.units ?? []) {
+        const idx = store.drones.findIndex(d => d.name === unit.name)
+        if (idx !== -1) newDrone(idx, unit.mods, unit.weapons)
+    }
+    clearShareHash()
+}
+
+// Watch for shared state (arrives async from App.vue)
+if (sharedState.value?.t === 'drones') {
+    restoreFromShare(sharedState.value)
+    sharedState.value = null
+} else {
+    const unwatch = watch(sharedState, (val) => {
+        if (val?.t === 'drones') {
+            restoreFromShare(val)
+            sharedState.value = null
+            unwatch()
+        }
+    })
+}
 </script>
 
 <template>
@@ -137,6 +187,11 @@ const moveType = (drone) => {
                     <span>Drone Pilot</span>
                 </label>
             </div>
+
+            <button class="share-btn" @click="shareHandler" :disabled="droneList.length === 0" :title="shareCopied || 'Share build'">
+                <svg v-if="!shareCopied" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+                <svg v-else xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            </button>
         </div>
 
         <div class="browse-section" ref="browseRef">
@@ -229,10 +284,13 @@ const moveType = (drone) => {
         <div class="drone-cards">
             <Drone v-for="(drone, index) in droneList"
                 :key="drone._uid"
+                :ref="el => { if (el) droneRefs[drone._uid] = el; else delete droneRefs[drone._uid] }"
                 :index="index"
                 @remove-drone="(idx) => { droneList.splice(idx, 1); costs.splice(idx, 1); }"
                 @updated="(data) => costs[data.index] = data.cost"
                 :drone="droneList[index]"
+                :initialMods="drone._initialMods"
+                :initialWeapons="drone._initialWeapons"
             />
         </div>
     </div>
@@ -249,14 +307,14 @@ const moveType = (drone) => {
 .total-cost-bar {
     display: flex;
     align-items: center;
-    justify-content: center;
     gap: 24px;
     padding: 10px 20px;
     margin-bottom: 1.5rem;
     background: var(--cwn-bg-soft);
     border: 1px solid var(--cwn-border);
     border-radius: 4px;
-    flex-wrap: wrap;
+    white-space: nowrap;
+    min-width: fit-content;
 }
 
 .cost-section {
@@ -538,6 +596,31 @@ tbody tr.row-selected {
 .detail-value {
     color: var(--cwn-text-bright);
     font-size: 0.9em;
+}
+
+/* Share button */
+.share-btn {
+    margin-left: auto;
+    padding: 5px;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 3px;
+    color: var(--cwn-text-muted);
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+}
+
+.share-btn:hover:not(:disabled) {
+    color: var(--cwn-cyan);
+    border-color: var(--cwn-cyan-dim);
+    box-shadow: var(--cwn-glow-cyan);
+}
+
+.share-btn:disabled {
+    opacity: 0.3;
+    cursor: default;
 }
 
 /* Drone cards - flex wrap layout */

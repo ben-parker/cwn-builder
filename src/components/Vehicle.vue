@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import ModBlock from '@/components/ModBlock.vue'
 import WeaponBlock from '@/components/WeaponBlock.vue'
 import ItemPickerDialog from '@/components/ItemPickerDialog.vue'
@@ -9,7 +9,7 @@ import { addModEffect, removeModEffect } from '@/services/vehicle_fitting_effect
 
 const store = useVehicleStore()
 const weaponStore = useWeaponStore()
-const props = defineProps(['index', 'vehicle'])
+const props = defineProps(['index', 'vehicle', 'initialMods', 'initialWeapons'])
 const emit = defineEmits(['updated'])
 
 const searchText = ref('')
@@ -233,6 +233,23 @@ const openWeaponDialog = function() {
     weaponAddedThisSession.value = []
     weaponDialogVisible.value = true
 }
+
+defineExpose({ mods, weapons })
+
+onMounted(() => {
+    if (props.initialMods?.length) {
+        for (const name of props.initialMods) {
+            const mod = store.vehicleMods.find(m => m.name === name)
+            if (mod) select(mod)
+        }
+    }
+    if (props.initialWeapons?.length) {
+        for (const name of props.initialWeapons) {
+            const weapon = weaponStore.weapons.find(w => w.name === name)
+            if (weapon) selectWeapon(weapon)
+        }
+    }
+})
 
 // Detail panel cost display for previewed mod
 const previewCostDisplay = computed(() => {

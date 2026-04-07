@@ -3,7 +3,8 @@
     "allow": [
       "Bash(npm run:*)",
       "Bash(npx vite:*)",
-      "Bash(codex exec:*)"
+      "Bash(codex exec:*)",
+      "Bash(npx vitest:*)"
     ]
   }
 }
