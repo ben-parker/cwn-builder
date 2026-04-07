@@ -1,13 +1,18 @@
 <script setup>
-import { defineAsyncComponent, shallowRef, watch, onMounted, onUnmounted } from 'vue'
+import { defineAsyncComponent, shallowRef, watch, onMounted, onUnmounted, h } from 'vue'
 import { hasShareHash, readShareState } from '@/services/share'
 import { useAppModeStore } from '@/stores/appMode'
 import { saveActiveTool, loadActiveTool } from '@/services/persistence'
+import GhostTable from './components/GhostTable.vue'
+
+const ghost = (columns, rows, accent) => ({
+  setup: () => () => h(GhostTable, { columns, rows, accentColor: accent })
+})
 
 const tools = [
-  { id: 'drones', label: 'Drones', component: defineAsyncComponent(() => import('./components/Drones.vue')) },
-  { id: 'vehicles', label: 'Vehicles', component: defineAsyncComponent(() => import('./components/Vehicles.vue')) },
-  { id: 'cyberdecks', label: 'Cyberdecks', component: defineAsyncComponent(() => import('./components/Cyberdecks.vue')) },
+  { id: 'drones', label: 'Drones', component: defineAsyncComponent({ loader: () => import('./components/Drones.vue'), loadingComponent: ghost(10, 6, 'var(--cwn-cyan)') }) },
+  { id: 'vehicles', label: 'Vehicles', component: defineAsyncComponent({ loader: () => import('./components/Vehicles.vue'), loadingComponent: ghost(13, 6, 'var(--cwn-yellow)') }) },
+  { id: 'cyberdecks', label: 'Cyberdecks', component: defineAsyncComponent({ loader: () => import('./components/Cyberdecks.vue'), loadingComponent: ghost(8, 5, 'var(--cwn-magenta)') }) },
 ]
 
 const appMode = useAppModeStore()
