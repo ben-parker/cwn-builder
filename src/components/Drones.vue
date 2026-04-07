@@ -1,11 +1,12 @@
 <script setup>
-import { ref, computed, nextTick, watch, onMounted, onUnmounted, toRaw, inject } from 'vue'
+import { ref, computed, nextTick, watch, onMounted, onUnmounted, onDeactivated, toRaw } from 'vue'
 import { useDroneStore } from '@/stores/drones'
 import { useWeaponStore } from '@/stores/weapons'
+import { useAppModeStore } from '@/stores/appMode'
 import Drone from '@/components/Drone.vue'
-import { clearShareHash } from '@/services/share'
 import ShareButton from '@/components/ShareButton.vue'
 import GhostTable from '@/components/GhostTable.vue'
+import { savePageState, loadPageState, debounce } from '@/services/persistence'
 
 const store = useDroneStore()
 const weaponStore = useWeaponStore()
@@ -118,41 +119,81 @@ const buildPayload = () => {
     return payload
 }
 
-// Restore from shared state provided by App.vue
-const sharedState = inject('sharedState')
-const restoreFromShare = (shared) => {
-    if (shared?.t !== 'drones') return
+// Restore builds from a payload (shared link or localStorage)
+const appMode = useAppModeStore()
+
+const restoreFromPayload = (payload) => {
+    if (payload?.t !== 'drones') return
     droneList.value = []
     costs.value = []
     selectedIndex.value = null
-    if (shared.lvl != null) setLevel(shared.lvl)
-    if (shared.focus) store.hasDronePilotFocus = true
-    for (const unit of shared.units ?? []) {
+    store.characterLevel = null
+    store.hasDronePilotFocus = false
+    if (payload.lvl != null) setLevel(payload.lvl)
+    if (payload.focus) store.hasDronePilotFocus = true
+    for (const unit of payload.units ?? []) {
         const idx = store.drones.findIndex(d => d.name === unit.name)
         if (idx !== -1) newDrone(idx, unit.mods, unit.weapons)
     }
-    clearShareHash()
 }
+
+// Auto-save to localStorage (debounced, skipped during shared view)
+const scheduleSave = debounce(() => {
+    if (appMode.isSharedView) return
+    savePageState('drones', buildPayload())
+}, 500)
+
+const triggerSave = () => scheduleSave()
+
+onDeactivated(() => scheduleSave.flush())
 
 onMounted(async () => {
     try {
         await Promise.all([store.loadDroneData(), weaponStore.loadWeaponData()])
         isReady.value = true
-        if (sharedState.value?.t === 'drones') {
-            restoreFromShare(sharedState.value)
-            sharedState.value = null
+
+        if (appMode.isSharedView) {
+            if (appMode.sharedPayload?.t === 'drones') restoreFromPayload(appMode.sharedPayload)
+        } else {
+            const saved = loadPageState('drones')
+            if (saved) restoreFromPayload(saved)
         }
     } catch {
         loadError.value = true
     }
 })
 
-// Watch for shared state (arrives async from App.vue or via hashchange)
-watch(sharedState, (val) => {
-    if (val?.t === 'drones' && isReady.value) {
-        restoreFromShare(val)
-        sharedState.value = null
+// Persist on unit list changes and store setting changes
+watch(() => droneList.value.length, triggerSave)
+watch(() => [store.characterLevel, store.hasDronePilotFocus], triggerSave)
+
+// Handle shared view transitions
+watch(() => appMode.isSharedView, (isShared, wasShared) => {
+    if (!isReady.value) return
+    if (isShared) {
+        scheduleSave.flush()
+        if (appMode.sharedPayload?.t === 'drones') {
+            restoreFromPayload(appMode.sharedPayload)
+        } else {
+            droneList.value = []
+            costs.value = []
+            selectedIndex.value = null
+        }
+    } else if (wasShared) {
+        const saved = loadPageState('drones')
+        if (saved) {
+            restoreFromPayload(saved)
+        } else {
+            droneList.value = []
+            costs.value = []
+            selectedIndex.value = null
+        }
     }
+})
+
+// Handle hashchange while app is open (new share link pasted)
+watch(() => appMode.sharedPayload, (val) => {
+    if (val?.t === 'drones' && isReady.value) restoreFromPayload(val)
 })
 </script>
 
@@ -201,6 +242,9 @@ watch(sharedState, (val) => {
             </div>
 
             <ShareButton :build-payload="buildPayload" :disabled="droneList.length === 0" />
+            <button v-if="appMode.isSharedView" class="exit-shared-btn" @click="appMode.exitSharedView()">
+                Exit Shared View
+            </button>
         </div>
 
         <div class="browse-section" ref="browseRef">
@@ -296,7 +340,7 @@ watch(sharedState, (val) => {
                 :ref="el => { if (el) droneRefs[drone._uid] = el; else delete droneRefs[drone._uid] }"
                 :index="index"
                 @remove-drone="(idx) => { droneList.splice(idx, 1); costs.splice(idx, 1); }"
-                @updated="(data) => costs[data.index] = data.cost"
+                @updated="(data) => { costs[data.index] = data.cost; triggerSave() }"
                 :drone="droneList[index]"
                 :initialMods="drone._initialMods"
                 :initialWeapons="drone._initialWeapons"
@@ -621,5 +665,25 @@ tbody tr.row-selected {
     display: flex;
     flex-wrap: wrap;
     gap: 16px;
+}
+
+.exit-shared-btn {
+    padding: 4px 12px;
+    background: transparent;
+    border: 1px solid var(--cwn-cyan-dim);
+    border-radius: 3px;
+    color: var(--cwn-cyan);
+    font-size: 0.7em;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+}
+
+.exit-shared-btn:hover {
+    background: var(--cwn-cyan-dim);
+    color: var(--cwn-text-bright);
+    box-shadow: var(--cwn-glow-cyan);
 }
 </style>

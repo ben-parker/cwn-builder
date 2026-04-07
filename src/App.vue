@@ -1,6 +1,8 @@
 <script setup>
-import { defineAsyncComponent, shallowRef, provide, ref, onMounted, onUnmounted } from 'vue'
+import { defineAsyncComponent, shallowRef, watch, onMounted, onUnmounted } from 'vue'
 import { hasShareHash, readShareState } from '@/services/share'
+import { useAppModeStore } from '@/stores/appMode'
+import { saveActiveTool, loadActiveTool } from '@/services/persistence'
 
 const tools = [
   { id: 'drones', label: 'Drones', component: defineAsyncComponent(() => import('./components/Drones.vue')) },
@@ -8,9 +10,16 @@ const tools = [
   { id: 'cyberdecks', label: 'Cyberdecks', component: defineAsyncComponent(() => import('./components/Cyberdecks.vue')) },
 ]
 
-const activeTool = shallowRef(tools[0])
-const sharedState = ref(null)
-provide('sharedState', sharedState)
+const appMode = useAppModeStore()
+
+// Restore active tool from localStorage (if no share hash)
+const savedTool = !hasShareHash() ? tools.find(t => t.id === loadActiveTool()) : null
+const activeTool = shallowRef(savedTool ?? tools[0])
+
+// Persist active tool on change
+watch(activeTool, (tool) => {
+  if (!appMode.isSharedView) saveActiveTool(tool.id)
+})
 
 function applyShareHash() {
   if (!hasShareHash()) return
@@ -18,7 +27,7 @@ function applyShareHash() {
     if (state) {
       const matchedTool = tools.find(t => t.id === state.t)
       if (matchedTool) activeTool.value = matchedTool
-      sharedState.value = state
+      appMode.enterSharedView(state)
     }
   })
 }

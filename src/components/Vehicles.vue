@@ -1,11 +1,12 @@
 <script setup>
-import { ref, computed, nextTick, watch, onMounted, onUnmounted, toRaw, inject } from 'vue'
+import { ref, computed, nextTick, watch, onMounted, onUnmounted, onDeactivated, toRaw } from 'vue'
 import { useVehicleStore } from '@/stores/vehicles'
 import { useWeaponStore } from '@/stores/weapons'
+import { useAppModeStore } from '@/stores/appMode'
 import Vehicle from '@/components/Vehicle.vue'
-import { clearShareHash } from '@/services/share'
 import ShareButton from '@/components/ShareButton.vue'
 import GhostTable from '@/components/GhostTable.vue'
+import { savePageState, loadPageState, debounce } from '@/services/persistence'
 
 const store = useVehicleStore()
 const weaponStore = useWeaponStore()
@@ -102,41 +103,81 @@ const buildPayload = () => {
     return payload
 }
 
-// Restore from shared state provided by App.vue
-const sharedState = inject('sharedState')
-const restoreFromShare = (shared) => {
-    if (shared?.t !== 'vehicles') return
+// Restore builds from a payload (shared link or localStorage)
+const appMode = useAppModeStore()
+
+const restoreFromPayload = (payload) => {
+    if (payload?.t !== 'vehicles') return
     vehicleList.value = []
     costs.value = []
     selectedIndex.value = null
-    if (shared.lvl != null) setLevel(shared.lvl)
-    if (shared.focus) store.hasAceDriverFocus = true
-    for (const unit of shared.units ?? []) {
+    store.characterLevel = null
+    store.hasAceDriverFocus = false
+    if (payload.lvl != null) setLevel(payload.lvl)
+    if (payload.focus) store.hasAceDriverFocus = true
+    for (const unit of payload.units ?? []) {
         const idx = store.vehicles.findIndex(v => v.name === unit.name)
         if (idx !== -1) newVehicle(idx, unit.mods, unit.weapons)
     }
-    clearShareHash()
 }
+
+// Auto-save to localStorage (debounced, skipped during shared view)
+const scheduleSave = debounce(() => {
+    if (appMode.isSharedView) return
+    savePageState('vehicles', buildPayload())
+}, 500)
+
+const triggerSave = () => scheduleSave()
+
+onDeactivated(() => scheduleSave.flush())
 
 onMounted(async () => {
     try {
         await Promise.all([store.loadVehicleData(), weaponStore.loadWeaponData()])
         isReady.value = true
-        if (sharedState.value?.t === 'vehicles') {
-            restoreFromShare(sharedState.value)
-            sharedState.value = null
+
+        if (appMode.isSharedView) {
+            if (appMode.sharedPayload?.t === 'vehicles') restoreFromPayload(appMode.sharedPayload)
+        } else {
+            const saved = loadPageState('vehicles')
+            if (saved) restoreFromPayload(saved)
         }
     } catch {
         loadError.value = true
     }
 })
 
-// Watch for shared state (arrives async from App.vue or via hashchange)
-watch(sharedState, (val) => {
-    if (val?.t === 'vehicles' && isReady.value) {
-        restoreFromShare(val)
-        sharedState.value = null
+// Persist on unit list changes and store setting changes
+watch(() => vehicleList.value.length, triggerSave)
+watch(() => [store.characterLevel, store.hasAceDriverFocus], triggerSave)
+
+// Handle shared view transitions
+watch(() => appMode.isSharedView, (isShared, wasShared) => {
+    if (!isReady.value) return
+    if (isShared) {
+        scheduleSave.flush()
+        if (appMode.sharedPayload?.t === 'vehicles') {
+            restoreFromPayload(appMode.sharedPayload)
+        } else {
+            vehicleList.value = []
+            costs.value = []
+            selectedIndex.value = null
+        }
+    } else if (wasShared) {
+        const saved = loadPageState('vehicles')
+        if (saved) {
+            restoreFromPayload(saved)
+        } else {
+            vehicleList.value = []
+            costs.value = []
+            selectedIndex.value = null
+        }
     }
+})
+
+// Handle hashchange while app is open (new share link pasted)
+watch(() => appMode.sharedPayload, (val) => {
+    if (val?.t === 'vehicles' && isReady.value) restoreFromPayload(val)
 })
 </script>
 
@@ -185,6 +226,9 @@ watch(sharedState, (val) => {
             </div>
 
             <ShareButton :build-payload="buildPayload" :disabled="vehicleList.length === 0" />
+            <button v-if="appMode.isSharedView" class="exit-shared-btn" @click="appMode.exitSharedView()">
+                Exit Shared View
+            </button>
         </div>
 
         <div class="browse-section" ref="browseRef">
@@ -301,7 +345,7 @@ watch(sharedState, (val) => {
                 :ref="el => { if (el) vehicleRefs[vehicle._uid] = el; else delete vehicleRefs[vehicle._uid] }"
                 :index="index"
                 @remove-vehicle="(idx) => { vehicleList.splice(idx, 1); costs.splice(idx, 1); }"
-                @updated="(data) => costs[data.index] = data.cost"
+                @updated="(data) => { costs[data.index] = data.cost; triggerSave() }"
                 :vehicle="vehicleList[index]"
                 :initialMods="vehicle._initialMods"
                 :initialWeapons="vehicle._initialWeapons"
@@ -638,5 +682,25 @@ tbody tr.row-selected {
     display: flex;
     flex-wrap: wrap;
     gap: 16px;
+}
+
+.exit-shared-btn {
+    padding: 4px 12px;
+    background: transparent;
+    border: 1px solid var(--cwn-yellow-dim);
+    border-radius: 3px;
+    color: var(--cwn-yellow);
+    font-size: 0.7em;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+}
+
+.exit-shared-btn:hover {
+    background: var(--cwn-yellow-dim);
+    color: var(--cwn-text-bright);
+    box-shadow: var(--cwn-glow-yellow);
 }
 </style>
