@@ -207,21 +207,6 @@ watch(() => appMode.sharedPayload, (val) => {
                 <span class="total-cost-value">{{ allDroneCost }}</span>
             </div>
 
-            <div v-if="store.droneBudget > 0" class="budget-section">
-                <div class="budget-item">
-                    <span class="budget-label">Budget</span>
-                    <span class="budget-value">{{ money(store.droneBudget) }}</span>
-                </div>
-                <div class="budget-item">
-                    <span class="budget-label">Remaining</span>
-                    <span class="budget-value" :class="{ 'zero-budget': budgetRemaining <= 0 }">{{ money(Math.max(0, budgetRemaining)) }}</span>
-                </div>
-                <div class="budget-item">
-                    <span class="budget-label">Out of Pocket</span>
-                    <span class="budget-value" :class="outOfPocket > 0 ? 'out-of-pocket' : 'zero-budget'">{{ money(outOfPocket) }}</span>
-                </div>
-            </div>
-
             <div class="char-section">
                 <div class="char-field">
                     <label class="char-label" for="char-level">Level</label>
@@ -239,6 +224,21 @@ watch(() => appMode.sharedPayload, (val) => {
                     <input type="checkbox" v-model="store.hasDronePilotFocus" />
                     <span>Drone Pilot</span>
                 </label>
+            </div>
+
+            <div v-if="store.droneBudget > 0" class="budget-section">
+                <div class="budget-item">
+                    <span class="budget-label">Budget</span>
+                    <span class="budget-value">{{ money(store.droneBudget) }}</span>
+                </div>
+                <div class="budget-item">
+                    <span class="budget-label">Remaining</span>
+                    <span class="budget-value" :class="{ 'zero-budget': budgetRemaining <= 0 }">{{ money(Math.max(0, budgetRemaining)) }}</span>
+                </div>
+                <div class="budget-item">
+                    <span class="budget-label">Out of Pocket</span>
+                    <span class="budget-value" :class="outOfPocket > 0 ? 'out-of-pocket' : 'zero-budget'">{{ money(outOfPocket) }}</span>
+                </div>
             </div>
 
             <ShareButton :build-payload="buildPayload" :disabled="droneList.length === 0" />
@@ -383,6 +383,7 @@ watch(() => appMode.sharedPayload, (val) => {
     display: flex;
     align-items: center;
     gap: 8px;
+    min-width: 180px;
 }
 
 .total-cost-label {
