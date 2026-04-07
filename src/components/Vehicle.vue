@@ -10,7 +10,7 @@ import { addModEffect, removeModEffect } from '@/services/vehicle_fitting_effect
 const store = useVehicleStore()
 const weaponStore = useWeaponStore()
 const props = defineProps(['index', 'vehicle', 'initialMods', 'initialWeapons'])
-const emit = defineEmits(['updated'])
+const emit = defineEmits(['updated', 'removeVehicle'])
 
 const searchText = ref('')
 const visible = ref(false)
@@ -325,10 +325,10 @@ const previewCostLabel = computed(() => {
             </div>
         </div>
         <div v-if="mods.length" class="vehicle-mods">
-            <ModBlock class="mod-block" v-for="(mod, index) in mods" @remove-mod="removeMod" :fitting="mod" :drone="vehicle" removable="true" :index="index" accent="yellow" />
+            <ModBlock class="mod-block" v-for="(mod, index) in mods" @remove-mod="removeMod" :fitting="mod" :unit="vehicle" removable="true" :index="index" accent="yellow" />
         </div>
         <div v-if="weapons.length" class="vehicle-weapons">
-            <WeaponBlock class="weapon-block" v-for="(weapon, index) in weapons" @remove-weapon="removeWeapon" :weapon="weapon" :drone="vehicle" removable :index="index" />
+            <WeaponBlock class="weapon-block" v-for="(weapon, index) in weapons" @remove-weapon="removeWeapon" :weapon="weapon" :unit="vehicle" removable :index="index" />
         </div>
 
         <!-- Mod/Fitting Dialog -->
@@ -356,7 +356,7 @@ const previewCostLabel = computed(() => {
                     compact
                     accent="yellow"
                     :fitting="fitting"
-                    :drone="vehicle"
+                    :unit="vehicle"
                     :searchText="searchText"
                     :selected="previewedMod?.name === fitting.name"
                     :equipped="equippedNames.has(fitting.name)"
@@ -379,7 +379,7 @@ const previewCostLabel = computed(() => {
                     compact
                     accent="yellow"
                     :fitting="fitting"
-                    :drone="vehicle"
+                    :unit="vehicle"
                     :searchText="searchText"
                     :selected="previewedMod?.name === fitting.name"
                     :equipped="equippedNames.has(fitting.name)"
@@ -482,7 +482,7 @@ const previewCostLabel = computed(() => {
                             :key="weapon.name"
                             compact
                             :weapon="weapon"
-                            :drone="vehicle"
+                            :unit="vehicle"
                             :searchText="weaponSearchText"
                             :selected="previewedWeapon?.name === weapon.name"
                             :equipped="equippedWeaponNames.has(weapon.name)"

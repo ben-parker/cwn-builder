@@ -7,7 +7,7 @@ defineEmits(['removeWeapon'])
 const props = defineProps({
     index: { type: Number, default: null },
     weapon: { type: Object, required: true },
-    drone: { type: Object, required: true },
+    unit: { type: Object, required: true },
     removable: { type: [Boolean, String], default: false },
     compact: { type: Boolean, default: false },
     selected: { type: Boolean, default: false },

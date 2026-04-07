@@ -3,11 +3,14 @@ import { ref, computed, nextTick, watch, onMounted, onUnmounted, toRaw, inject }
 import { useVehicleStore } from '@/stores/vehicles'
 import { useWeaponStore } from '@/stores/weapons'
 import Vehicle from '@/components/Vehicle.vue'
-import { buildShareUrl, clearShareHash } from '@/services/share'
+import { clearShareHash } from '@/services/share'
+import ShareButton from '@/components/ShareButton.vue'
+import GhostTable from '@/components/GhostTable.vue'
 
 const store = useVehicleStore()
 const weaponStore = useWeaponStore()
-await Promise.all([store.loadVehicleData(), weaponStore.loadWeaponData()])
+const isReady = ref(false)
+const loadError = ref(false)
 
 const vehicleList = ref([])
 const costs = ref([])
@@ -16,7 +19,6 @@ const tableRef = ref(null)
 const arrowTop = ref(0)
 let nextVehicleId = 0
 const vehicleRefs = {}
-const shareCopied = ref('')
 
 const updateArrowPosition = () => {
     if (selectedIndex.value === null || !tableRef.value) return;
@@ -85,7 +87,7 @@ const armorDisplay = (vehicle) => {
     return vehicle.armor
 }
 
-const shareHandler = async () => {
+const buildPayload = () => {
     const units = vehicleList.value.map(vehicle => {
         const ref = vehicleRefs[vehicle._uid]
         return {
@@ -97,15 +99,16 @@ const shareHandler = async () => {
     const payload = { v: 1, t: 'vehicles', units }
     if (store.characterLevel != null) payload.lvl = store.characterLevel
     if (store.hasAceDriverFocus) payload.focus = true
-    const copied = await buildShareUrl(payload)
-    shareCopied.value = copied ? 'Copied!' : 'Link ready'
-    setTimeout(() => { shareCopied.value = '' }, 2000)
+    return payload
 }
 
 // Restore from shared state provided by App.vue
 const sharedState = inject('sharedState')
 const restoreFromShare = (shared) => {
     if (shared?.t !== 'vehicles') return
+    vehicleList.value = []
+    costs.value = []
+    selectedIndex.value = null
     if (shared.lvl != null) setLevel(shared.lvl)
     if (shared.focus) store.hasAceDriverFocus = true
     for (const unit of shared.units ?? []) {
@@ -115,22 +118,32 @@ const restoreFromShare = (shared) => {
     clearShareHash()
 }
 
-if (sharedState.value?.t === 'vehicles') {
-    restoreFromShare(sharedState.value)
-    sharedState.value = null
-} else {
-    const unwatch = watch(sharedState, (val) => {
-        if (val?.t === 'vehicles') {
-            restoreFromShare(val)
+onMounted(async () => {
+    try {
+        await Promise.all([store.loadVehicleData(), weaponStore.loadWeaponData()])
+        isReady.value = true
+        if (sharedState.value?.t === 'vehicles') {
+            restoreFromShare(sharedState.value)
             sharedState.value = null
-            unwatch()
         }
-    })
-}
+    } catch {
+        loadError.value = true
+    }
+})
+
+// Watch for shared state (arrives async from App.vue or via hashchange)
+watch(sharedState, (val) => {
+    if (val?.t === 'vehicles' && isReady.value) {
+        restoreFromShare(val)
+        sharedState.value = null
+    }
+})
 </script>
 
 <template>
-    <div id="vehicle-wrapper">
+    <GhostTable v-if="!isReady && !loadError" :columns="13" :rows="6" accent-color="var(--cwn-yellow)" />
+    <div v-else-if="loadError" class="load-error">Failed to load vehicle data. Try refreshing the page.</div>
+    <div v-else id="vehicle-wrapper">
         <div class="total-cost-bar">
             <div class="cost-section">
                 <span class="total-cost-label">Total Cost</span>
@@ -171,10 +184,7 @@ if (sharedState.value?.t === 'vehicles') {
                 </label>
             </div>
 
-            <button class="share-btn" @click="shareHandler" :disabled="vehicleList.length === 0" :title="shareCopied || 'Share build'">
-                <svg v-if="!shareCopied" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
-                <svg v-else xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-            </button>
+            <ShareButton :build-payload="buildPayload" :disabled="vehicleList.length === 0" />
         </div>
 
         <div class="browse-section" ref="browseRef">
@@ -301,6 +311,15 @@ if (sharedState.value?.t === 'vehicles') {
 </template>
 
 <style scoped>
+.load-error {
+    padding: 2rem;
+    color: var(--cwn-magenta);
+    text-align: center;
+    border: 1px solid var(--cwn-magenta-dim);
+    border-radius: 4px;
+    background: var(--cwn-bg-soft);
+}
+
 #vehicle-wrapper {
     width: 100%;
     display: flex;
@@ -612,31 +631,6 @@ tbody tr.row-selected {
     font-size: 0.8em;
     color: var(--cwn-text-muted);
     font-style: italic;
-}
-
-/* Share button */
-.share-btn {
-    margin-left: auto;
-    padding: 5px;
-    background: transparent;
-    border: 1px solid transparent;
-    border-radius: 3px;
-    color: var(--cwn-text-muted);
-    cursor: pointer;
-    transition: all 0.15s;
-    display: flex;
-    align-items: center;
-}
-
-.share-btn:hover:not(:disabled) {
-    color: var(--cwn-yellow);
-    border-color: var(--cwn-yellow-dim);
-    box-shadow: var(--cwn-glow-yellow);
-}
-
-.share-btn:disabled {
-    opacity: 0.3;
-    cursor: default;
 }
 
 /* Vehicle cards - flex wrap layout */

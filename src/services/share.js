@@ -8,7 +8,7 @@ async function getLzString() {
 function validatePayload(obj) {
   if (!obj || typeof obj !== 'object') return null
   if (obj.v !== CURRENT_VERSION) return null
-  if (obj.t !== 'drones' && obj.t !== 'vehicles') return null
+  if (obj.t !== 'drones' && obj.t !== 'vehicles' && obj.t !== 'cyberdecks') return null
   if (obj.lvl != null) {
     const n = parseInt(obj.lvl)
     if (isNaN(n) || n < 1 || n > 10) return null
@@ -45,7 +45,6 @@ export async function buildShareUrl(payload) {
   const lzString = await getLzString()
   const encoded = encodeShareState(payload, lzString)
   const url = window.location.origin + window.location.pathname + HASH_PREFIX + encoded
-  window.history.replaceState(null, '', HASH_PREFIX + encoded)
   try {
     await navigator.clipboard.writeText(url)
     return true

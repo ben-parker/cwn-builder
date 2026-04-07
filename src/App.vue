@@ -1,18 +1,19 @@
 <script setup>
-import { defineAsyncComponent, shallowRef, provide, ref } from 'vue'
-import { hasShareHash, readShareState, clearShareHash } from '@/services/share'
+import { defineAsyncComponent, shallowRef, provide, ref, onMounted, onUnmounted } from 'vue'
+import { hasShareHash, readShareState } from '@/services/share'
 
 const tools = [
   { id: 'drones', label: 'Drones', component: defineAsyncComponent(() => import('./components/Drones.vue')) },
   { id: 'vehicles', label: 'Vehicles', component: defineAsyncComponent(() => import('./components/Vehicles.vue')) },
+  { id: 'cyberdecks', label: 'Cyberdecks', component: defineAsyncComponent(() => import('./components/Cyberdecks.vue')) },
 ]
 
 const activeTool = shallowRef(tools[0])
 const sharedState = ref(null)
 provide('sharedState', sharedState)
 
-// Check hash synchronously (no lz-string import needed), then decode async and provide to children
-if (hasShareHash()) {
+function applyShareHash() {
+  if (!hasShareHash()) return
   readShareState().then(state => {
     if (state) {
       const matchedTool = tools.find(t => t.id === state.t)
@@ -21,6 +22,14 @@ if (hasShareHash()) {
     }
   })
 }
+
+// Check on initial load
+applyShareHash()
+
+// Also handle pasting a share link while the app is already open
+const onHashChange = () => applyShareHash()
+onMounted(() => window.addEventListener('hashchange', onHashChange))
+onUnmounted(() => window.removeEventListener('hashchange', onHashChange))
 </script>
 
 <template>
@@ -41,11 +50,9 @@ if (hasShareHash()) {
     </footer>
   </nav>
   <main class="content">
-    <Suspense>
-      <KeepAlive>
-        <component :is="activeTool.component" />
-      </KeepAlive>
-    </Suspense>
+    <KeepAlive>
+      <component :is="activeTool.component" />
+    </KeepAlive>
   </main>
 </template>
 
@@ -119,6 +126,17 @@ if (hasShareHash()) {
   background: var(--cwn-bg-mute);
   border-left-color: var(--cwn-yellow);
   text-shadow: var(--cwn-glow-yellow);
+}
+
+.sidebar-nav li.tool-cyberdecks:hover {
+  border-left-color: var(--cwn-magenta-dim);
+}
+
+.sidebar-nav li.tool-cyberdecks.active {
+  color: var(--cwn-magenta);
+  background: var(--cwn-bg-mute);
+  border-left-color: var(--cwn-magenta);
+  text-shadow: var(--cwn-glow-magenta);
 }
 
 .sidebar-footer {

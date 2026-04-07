@@ -3,11 +3,14 @@ import { ref, computed, nextTick, watch, onMounted, onUnmounted, toRaw, inject }
 import { useDroneStore } from '@/stores/drones'
 import { useWeaponStore } from '@/stores/weapons'
 import Drone from '@/components/Drone.vue'
-import { buildShareUrl, clearShareHash } from '@/services/share'
+import { clearShareHash } from '@/services/share'
+import ShareButton from '@/components/ShareButton.vue'
+import GhostTable from '@/components/GhostTable.vue'
 
 const store = useDroneStore()
 const weaponStore = useWeaponStore()
-await Promise.all([store.loadDroneData(), weaponStore.loadWeaponData()])
+const isReady = ref(false)
+const loadError = ref(false)
 
 const droneList = ref([])
 const costs = ref([])
@@ -16,7 +19,6 @@ const tableRef = ref(null)
 const arrowTop = ref(0)
 let nextDroneId = 0
 const droneRefs = {}
-const shareCopied = ref('')
 
 const updateArrowPosition = () => {
     if (selectedIndex.value === null || !tableRef.value) return;
@@ -101,7 +103,7 @@ const moveType = (drone) => {
     return 'Ground';
 };
 
-const shareHandler = async () => {
+const buildPayload = () => {
     const units = droneList.value.map(drone => {
         const ref = droneRefs[drone._uid]
         return {
@@ -113,15 +115,16 @@ const shareHandler = async () => {
     const payload = { v: 1, t: 'drones', units }
     if (store.characterLevel != null) payload.lvl = store.characterLevel
     if (store.hasDronePilotFocus) payload.focus = true
-    const copied = await buildShareUrl(payload)
-    shareCopied.value = copied ? 'Copied!' : 'Link ready'
-    setTimeout(() => { shareCopied.value = '' }, 2000)
+    return payload
 }
 
 // Restore from shared state provided by App.vue
 const sharedState = inject('sharedState')
 const restoreFromShare = (shared) => {
     if (shared?.t !== 'drones') return
+    droneList.value = []
+    costs.value = []
+    selectedIndex.value = null
     if (shared.lvl != null) setLevel(shared.lvl)
     if (shared.focus) store.hasDronePilotFocus = true
     for (const unit of shared.units ?? []) {
@@ -131,23 +134,32 @@ const restoreFromShare = (shared) => {
     clearShareHash()
 }
 
-// Watch for shared state (arrives async from App.vue)
-if (sharedState.value?.t === 'drones') {
-    restoreFromShare(sharedState.value)
-    sharedState.value = null
-} else {
-    const unwatch = watch(sharedState, (val) => {
-        if (val?.t === 'drones') {
-            restoreFromShare(val)
+onMounted(async () => {
+    try {
+        await Promise.all([store.loadDroneData(), weaponStore.loadWeaponData()])
+        isReady.value = true
+        if (sharedState.value?.t === 'drones') {
+            restoreFromShare(sharedState.value)
             sharedState.value = null
-            unwatch()
         }
-    })
-}
+    } catch {
+        loadError.value = true
+    }
+})
+
+// Watch for shared state (arrives async from App.vue or via hashchange)
+watch(sharedState, (val) => {
+    if (val?.t === 'drones' && isReady.value) {
+        restoreFromShare(val)
+        sharedState.value = null
+    }
+})
 </script>
 
 <template>
-    <div id="drone-wrapper">
+    <GhostTable v-if="!isReady && !loadError" :columns="10" :rows="6" accent-color="var(--cwn-cyan)" />
+    <div v-else-if="loadError" class="load-error">Failed to load drone data. Try refreshing the page.</div>
+    <div v-else id="drone-wrapper">
         <div class="total-cost-bar">
             <div class="cost-section">
                 <span class="total-cost-label">Total Cost</span>
@@ -188,10 +200,7 @@ if (sharedState.value?.t === 'drones') {
                 </label>
             </div>
 
-            <button class="share-btn" @click="shareHandler" :disabled="droneList.length === 0" :title="shareCopied || 'Share build'">
-                <svg v-if="!shareCopied" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
-                <svg v-else xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-            </button>
+            <ShareButton :build-payload="buildPayload" :disabled="droneList.length === 0" />
         </div>
 
         <div class="browse-section" ref="browseRef">
@@ -297,6 +306,15 @@ if (sharedState.value?.t === 'drones') {
 </template>
 
 <style scoped>
+.load-error {
+    padding: 2rem;
+    color: var(--cwn-magenta);
+    text-align: center;
+    border: 1px solid var(--cwn-magenta-dim);
+    border-radius: 4px;
+    background: var(--cwn-bg-soft);
+}
+
 #drone-wrapper {
     width: 100%;
     display: flex;
@@ -596,31 +614,6 @@ tbody tr.row-selected {
 .detail-value {
     color: var(--cwn-text-bright);
     font-size: 0.9em;
-}
-
-/* Share button */
-.share-btn {
-    margin-left: auto;
-    padding: 5px;
-    background: transparent;
-    border: 1px solid transparent;
-    border-radius: 3px;
-    color: var(--cwn-text-muted);
-    cursor: pointer;
-    transition: all 0.15s;
-    display: flex;
-    align-items: center;
-}
-
-.share-btn:hover:not(:disabled) {
-    color: var(--cwn-cyan);
-    border-color: var(--cwn-cyan-dim);
-    box-shadow: var(--cwn-glow-cyan);
-}
-
-.share-btn:disabled {
-    opacity: 0.3;
-    cursor: default;
 }
 
 /* Drone cards - flex wrap layout */

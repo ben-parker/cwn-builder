@@ -4,7 +4,10 @@
       "Bash(npm run:*)",
       "Bash(npx vite:*)",
       "Bash(codex exec:*)",
-      "Bash(npx vitest:*)"
+      "Bash(npx vitest:*)",
+      "WebSearch",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:blog.vuejs.org)"
     ]
   }
 }

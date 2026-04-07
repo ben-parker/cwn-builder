@@ -10,7 +10,7 @@ import { addModEffect, removeModEffect } from '@/services/fitting_effects'
 const store = useDroneStore()
 const weaponStore = useWeaponStore()
 const props = defineProps(['index', 'drone', 'initialMods', 'initialWeapons'])
-const emit = defineEmits(['updated'])
+const emit = defineEmits(['updated', 'removeDrone'])
 
 const searchText = ref('')
 const visible = ref(false)
@@ -279,10 +279,10 @@ onMounted(() => {
             </div>
         </div>
         <div v-if="mods.length" class="drone-mods">
-            <ModBlock class="mod-block" v-for="(mod, index) in mods" @remove-mod="removeMod" :fitting="mod" :drone="drone" removable="true" :index="index" />
+            <ModBlock class="mod-block" v-for="(mod, index) in mods" @remove-mod="removeMod" :fitting="mod" :unit="drone" removable="true" :index="index" />
         </div>
         <div v-if="weapons.length" class="drone-weapons">
-            <WeaponBlock class="weapon-block" v-for="(weapon, index) in weapons" @remove-weapon="removeWeapon" :weapon="weapon" :drone="drone" removable :index="index" />
+            <WeaponBlock class="weapon-block" v-for="(weapon, index) in weapons" @remove-weapon="removeWeapon" :weapon="weapon" :unit="drone" removable :index="index" />
         </div>
 
         <!-- Mod/Fitting Dialog -->
@@ -308,7 +308,7 @@ onMounted(() => {
                     :key="'f-' + fitting.name"
                     compact
                     :fitting="fitting"
-                    :drone="drone"
+                    :unit="drone"
                     :searchText="searchText"
                     :selected="previewedMod?.name === fitting.name"
                     :equipped="equippedNames.has(fitting.name)"
@@ -328,7 +328,7 @@ onMounted(() => {
                     :key="'m-' + fitting.name"
                     compact
                     :fitting="fitting"
-                    :drone="drone"
+                    :unit="drone"
                     :searchText="searchText"
                     :selected="previewedMod?.name === fitting.name"
                     :equipped="equippedNames.has(fitting.name)"
@@ -410,7 +410,7 @@ onMounted(() => {
                             :key="weapon.name"
                             compact
                             :weapon="weapon"
-                            :drone="drone"
+                            :unit="drone"
                             :searchText="weaponSearchText"
                             :selected="previewedWeapon?.name === weapon.name"
                             :equipped="equippedWeaponNames.has(weapon.name)"

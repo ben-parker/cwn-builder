@@ -1,0 +1,74 @@
+[
+  {
+    "name": "Cranial Jack Only",
+    "cost": 0,
+    "bonus_access": 0,
+    "memory": 0,
+    "shielding": 0,
+    "cpu": 1,
+    "enc": 0
+  },
+  {
+    "name": "Scrap Deck",
+    "cost": 500,
+    "bonus_access": 1,
+    "memory": 8,
+    "shielding": 5,
+    "cpu": 2,
+    "enc": 1
+  },
+  {
+    "name": "Tanto",
+    "cost": 5000,
+    "bonus_access": 1,
+    "memory": 10,
+    "shielding": 10,
+    "cpu": 3,
+    "enc": 1
+  },
+  {
+    "name": "Icepick",
+    "cost": 15000,
+    "bonus_access": 2,
+    "memory": 10,
+    "shielding": 10,
+    "cpu": 3,
+    "enc": 1
+  },
+  {
+    "name": "Synapse",
+    "cost": 30000,
+    "bonus_access": 2,
+    "memory": 11,
+    "shielding": 5,
+    "cpu": 4,
+    "enc": 1
+  },
+  {
+    "name": "Beowulf",
+    "cost": 60000,
+    "bonus_access": 2,
+    "memory": 13,
+    "shielding": 10,
+    "cpu": 4,
+    "enc": 1
+  },
+  {
+    "name": "Tizona",
+    "cost": 100000,
+    "bonus_access": 3,
+    "memory": 11,
+    "shielding": 10,
+    "cpu": 5,
+    "enc": 1
+  },
+  {
+    "name": "Taifu",
+    "cost": 250000,
+    "bonus_access": 3,
+    "memory": 13,
+    "shielding": 15,
+    "cpu": 6,
+    "enc": 1
+  }
+]

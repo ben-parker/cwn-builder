@@ -6,7 +6,7 @@ defineEmits(['removeMod'])
 const props = defineProps({
     index: { type: Number, default: null },
     fitting: { type: Object, required: true },
-    drone: { type: Object, required: true },
+    unit: { type: Object, required: true },
     removable: { type: [Boolean, String], default: false },
     compact: { type: Boolean, default: false },
     selected: { type: Boolean, default: false },
@@ -42,7 +42,7 @@ const costDisplay = computed(() => {
 
 const fullCostDisplay = computed(() => {
     if (props.fitting.cost_multiplier !== undefined)
-        return '$' + (props.fitting.cost_multiplier * props.drone.cost).toLocaleString('en-US')
+        return '$' + (props.fitting.cost_multiplier * props.unit.cost).toLocaleString('en-US')
     return '$' + (props.fitting.cost || 0).toLocaleString('en-US')
 })
 
@@ -232,6 +232,11 @@ const descriptionSnippet = computed(() => {
     border-left: 2px solid var(--cwn-yellow);
 }
 
+.mod-compact.mod-selected.accent-magenta {
+    background: var(--cwn-bg-mute);
+    border-left: 2px solid var(--cwn-magenta);
+}
+
 .mod-compact.mod-equipped {
     opacity: 0.45;
     cursor: default;
@@ -317,6 +322,15 @@ const descriptionSnippet = computed(() => {
     border-radius: 2px;
 }
 
+.accent-magenta .equip-count {
+    color: var(--cwn-magenta-dim);
+    font-size: 0.75em;
+    font-weight: bold;
+    padding: 1px 5px;
+    border: 1px solid var(--cwn-magenta-dim);
+    border-radius: 2px;
+}
+
 .equipped-indicator {
     color: var(--cwn-text-muted);
     font-size: 0.85em;
@@ -340,6 +354,11 @@ const descriptionSnippet = computed(() => {
     font-weight: bold;
 }
 
+.accent-magenta .highlight {
+    color: var(--cwn-magenta);
+    font-weight: bold;
+}
+
 /* Flash animation applied by parent */
 .mod-compact.accent-cyan.mod-just-added {
     animation: mod-added-flash-cyan 0.6s ease-out;
@@ -349,6 +368,10 @@ const descriptionSnippet = computed(() => {
     animation: mod-added-flash-yellow 0.6s ease-out;
 }
 
+.mod-compact.accent-magenta.mod-just-added {
+    animation: mod-added-flash-magenta 0.6s ease-out;
+}
+
 @keyframes mod-added-flash-cyan {
     0% { background: rgba(0, 240, 255, 0.3); }
     100% { background: transparent; }
@@ -356,6 +379,11 @@ const descriptionSnippet = computed(() => {
 
 @keyframes mod-added-flash-yellow {
     0% { background: rgba(240, 224, 0, 0.3); }
+    100% { background: transparent; }
+}
+
+@keyframes mod-added-flash-magenta {
+    0% { background: rgba(255, 0, 170, 0.3); }
     100% { background: transparent; }
 }
 </style>

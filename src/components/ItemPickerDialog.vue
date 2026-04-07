@@ -305,3 +305,11 @@ const searchText = defineModel('searchText', { type: String, default: '' })
     color: var(--cwn-magenta);
 }
 </style>
+
+<style>
+/* Unscoped: PrimeVue Dialog portals to body, so scoped :deep() cannot reach it */
+.p-dialog .p-dialog-header .p-dialog-header-icon:focus-visible {
+    outline: none;
+    box-shadow: none;
+}
+</style>

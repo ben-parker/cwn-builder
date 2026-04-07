@@ -1,0 +1,44 @@
+[
+  {
+    "name": "Bespoke Code Optimization",
+    "effect_text": "Pick one Verb and one Subject; those utilities occupy no Memory and one instance of that Verb-Subject program doesn't count against CPU burden. Costs 20% of the deck's base cost.",
+    "cost_multiplier": 0.2,
+    "fix": 1
+  },
+  {
+    "name": "Buffer Circuits",
+    "effect_text": "Add 5 points to the deck's Shielding rating. Costs 20% of the deck's base cost.",
+    "cost_multiplier": 0.2,
+    "fix": 1
+  },
+  {
+    "name": "CPU Overclocking",
+    "effect_text": "Add 1 to the deck's CPU rating. Costs 30% of the deck's base cost.",
+    "cost_multiplier": 0.3,
+    "fix": 2
+  },
+  {
+    "name": "Memory Expansion",
+    "effect_text": "Add 4 units of Memory to the deck. Costs 20% of the deck's base cost.",
+    "cost_multiplier": 0.2,
+    "fix": 1
+  },
+  {
+    "name": "Polymorphic Intrusion Algorithms",
+    "effect_text": "Add 1 to Bonus Access but subtract 1 from the CPU rating. Costs 10% of the deck's base cost.",
+    "cost_multiplier": 0.1,
+    "fix": 1
+  },
+  {
+    "name": "Skeletal Case",
+    "effect_text": "Decrease Encumbrance by 1, but Memory suffers a -2 penalty. Costs 10% of the deck's base cost.",
+    "cost_multiplier": 0.1,
+    "fix": 1
+  },
+  {
+    "name": "Thermal Exhaust Case",
+    "effect_text": "Increase Encumbrance by 1, but the CPU value increases by 1 as well. Costs 30% of the deck's base cost.",
+    "cost_multiplier": 0.3,
+    "fix": 2
+  }
+]

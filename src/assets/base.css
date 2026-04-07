@@ -101,3 +101,9 @@ body {
   --_cab-color-bright: var(--cwn-yellow);
   --_cab-glow: var(--cwn-glow-yellow);
 }
+
+.circle-add-btn.cab-magenta {
+  --_cab-color: var(--cwn-magenta-dim);
+  --_cab-color-bright: var(--cwn-magenta);
+  --_cab-glow: var(--cwn-glow-magenta);
+}
