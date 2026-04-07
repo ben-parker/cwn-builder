@@ -334,6 +334,11 @@ const descriptionSnippet = computed(() => {
 .equipped-indicator {
     color: var(--cwn-text-muted);
     font-size: 0.85em;
+    width: 24px;
+    height: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .compact-snippet {
