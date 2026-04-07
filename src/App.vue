@@ -1,20 +1,109 @@
 <script setup>
-import Drones from './components/Drones.vue'
+import { defineAsyncComponent, shallowRef } from 'vue'
+
+const tools = [
+  { id: 'drones', label: 'Drones', component: defineAsyncComponent(() => import('./components/Drones.vue')) },
+]
+
+const activeTool = shallowRef(tools[0])
 </script>
 
 <template>
-  <header></header>
-
-  <main>
+  <nav class="sidebar">
+    <div class="sidebar-header">CWN Tools</div>
+    <ul class="sidebar-nav">
+      <li
+        v-for="tool in tools"
+        :key="tool.id"
+        :class="{ active: activeTool.id === tool.id }"
+        @click="activeTool = tool"
+      >
+        {{ tool.label }}
+      </li>
+    </ul>
+    <footer class="sidebar-footer">
+      Tab icon by <a href="https://www.flaticon.com/free-icons/cyberpunk" title="cyberpunk icons">Freepik - Flaticon</a>
+    </footer>
+  </nav>
+  <main class="content">
     <Suspense>
-      <Drones />
+      <KeepAlive>
+        <component :is="activeTool.component" />
+      </KeepAlive>
     </Suspense>
   </main>
 </template>
 
-<style>
-/* body .p-component-overlay {
-  background-color: rgba(255, 255, 0, 0.8);
-  opacity: 1;
-} */
+<style scoped>
+.sidebar {
+  width: 220px;
+  min-height: 100vh;
+  background: var(--cwn-bg-soft);
+  border-right: 1px solid var(--cwn-border);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+}
+
+.sidebar-header {
+  padding: 1.5rem 1rem;
+  font-size: 1.2rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  border-bottom: 1px solid var(--cwn-border);
+  background: linear-gradient(
+    90deg,
+    var(--cwn-cyan) 0%,
+    var(--cwn-magenta) 50%,
+    var(--cwn-yellow) 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 6px rgba(0, 240, 255, 0.4))
+          drop-shadow(0 0 12px rgba(255, 0, 170, 0.2));
+}
+
+.sidebar-nav {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.sidebar-nav li {
+  padding: 0.8rem 1.2rem;
+  cursor: pointer;
+  color: var(--cwn-text-muted);
+  border-left: 3px solid transparent;
+  transition: all 0.2s;
+}
+
+.sidebar-nav li:hover {
+  color: var(--cwn-text-bright);
+  background: var(--cwn-bg-mute);
+  border-left-color: var(--cwn-cyan-dim);
+}
+
+.sidebar-nav li.active {
+  color: var(--cwn-cyan);
+  background: var(--cwn-bg-mute);
+  border-left-color: var(--cwn-cyan);
+  text-shadow: var(--cwn-glow-cyan);
+}
+
+.sidebar-footer {
+  margin-top: auto;
+  padding: 1rem;
+  font-size: 0.7em;
+  color: var(--cwn-text-muted);
+  border-top: 1px solid var(--cwn-border);
+}
+
+.content {
+  flex: 1;
+  padding: 2rem;
+  overflow-y: auto;
+  max-width: 1280px;
+}
 </style>

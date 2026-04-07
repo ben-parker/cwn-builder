@@ -478,7 +478,7 @@ const heavyPlating = {
         }
     },
     remove() {
-        drone.extraMove -= -5;
+        drone.extraMove += 5;
         drone.extraAc -= 2;
 
         if (parseInt(drone.encumbrance)) {
