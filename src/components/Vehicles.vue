@@ -210,7 +210,7 @@ watch(() => appMode.sharedPayload, (val) => {
                 </label>
             </div>
 
-            <div v-if="store.vehicleBudget > 0" class="budget-section">
+            <div class="budget-section" :class="{ 'budget-hidden': store.vehicleBudget <= 0 }">
                 <div class="budget-item">
                     <span class="budget-label">Budget</span>
                     <span class="budget-value">{{ money(store.vehicleBudget) }}</span>
@@ -412,6 +412,10 @@ watch(() => appMode.sharedPayload, (val) => {
     gap: 16px;
     padding-left: 16px;
     border-left: 1px solid var(--cwn-border);
+}
+
+.budget-section.budget-hidden {
+    visibility: hidden;
 }
 
 .budget-item {

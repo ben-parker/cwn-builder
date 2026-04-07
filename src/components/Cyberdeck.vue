@@ -202,7 +202,7 @@ onMounted(() => {
     border-left: 3px solid var(--cwn-magenta);
     display: flex;
     align-items: center;
-    padding: 2px 12px;
+    padding: 10px 12px;
     border-radius: 4px 4px 0 0;
 }
 
