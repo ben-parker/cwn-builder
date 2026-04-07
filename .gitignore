@@ -28,3 +28,9 @@ coverage
 *.sw?
 
 *.tsbuildinfo
+
+# Build output (hashed filenames change every build)
+dist/assets/
+
+# SRD source material
+Cities_Without_Number_SRD_v1.0.txt
