@@ -14,14 +14,16 @@ const searchText = defineModel('searchText', { type: String, default: '' })
     <Dialog v-model:visible="visible" modal :dismissableMask="true" :header="title" :style="{ width: '75%' }">
         <!-- Toolbar -->
         <div class="dialog-toolbar">
-            <div class="search-wrapper">
-                <InputText v-model="searchText" placeholder="Search..." class="search-input" />
-                <a v-if="searchText" class="search-clear clickable" @click="searchText = ''" title="Clear search">&times;</a>
+            <div class="toolbar-list-section">
+                <div class="search-wrapper">
+                    <InputText v-model="searchText" placeholder="Search..." class="search-input" />
+                    <a v-if="searchText" class="search-clear clickable" @click="searchText = ''" title="Clear search">&times;</a>
+                </div>
+                <div class="toolbar-pills">
+                    <slot name="toolbar-pills" />
+                </div>
             </div>
-            <div class="toolbar-right">
-                <slot name="toolbar-pills" />
-                <button class="done-btn" @click="visible = false">Done</button>
-            </div>
+            <div class="toolbar-detail-section" />
         </div>
 
         <!-- Two-column body -->
@@ -64,11 +66,27 @@ const searchText = defineModel('searchText', { type: String, default: '' })
 /* ===== Dialog toolbar ===== */
 .dialog-toolbar {
     display: flex;
+    border-bottom: 1px solid var(--cwn-border);
+    background: var(--cwn-bg-soft);
+}
+
+.toolbar-list-section {
+    flex: 1;
+    display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 10px 16px;
-    border-bottom: 1px solid var(--cwn-border);
-    background: var(--cwn-bg-soft);
+}
+
+.toolbar-pills {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.toolbar-detail-section {
+    width: 320px;
+    min-width: 280px;
 }
 
 .search-wrapper {
@@ -110,30 +128,6 @@ const searchText = defineModel('searchText', { type: String, default: '' })
 
 .search-wrapper :deep(.p-inputtext::placeholder) {
     color: var(--cwn-text-muted);
-}
-
-.toolbar-right {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.done-btn {
-    border: 1px solid var(--cwn-cyan-dim);
-    color: var(--cwn-cyan);
-    background: transparent;
-    padding: 4px 16px;
-    font-size: 0.8em;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.done-btn:hover {
-    background: rgba(0, 240, 255, 0.15);
-    border-color: var(--cwn-cyan);
-    box-shadow: var(--cwn-glow-cyan);
 }
 
 /* ===== Two-column dialog body ===== */
@@ -180,29 +174,6 @@ const searchText = defineModel('searchText', { type: String, default: '' })
     border-bottom: 1px solid var(--cwn-magenta-dim);
     text-transform: uppercase;
     letter-spacing: 1px;
-}
-
-:deep(.row-add-btn) {
-    width: 24px;
-    height: 24px;
-    border: 1px solid var(--cwn-cyan-dim);
-    border-radius: 50%;
-    background: transparent;
-    color: var(--cwn-cyan);
-    font-size: 0.9em;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0;
-    transition: all 0.2s;
-    line-height: 1;
-}
-
-:deep(.row-add-btn:hover) {
-    background: rgba(0, 240, 255, 0.15);
-    border-color: var(--cwn-cyan);
-    box-shadow: var(--cwn-glow-cyan);
 }
 
 :deep(.no-results) {

@@ -9,7 +9,8 @@
     "trauma_die": "1d8",
     "trauma_roll": "x2",
     "traits": [],
-    "effect_text": "Light and heavy pistols are categorized by the caliber of the bullet they fire. Some operators prefer the low recoil and high mag capacity possible with a low-caliber round."
+    "effect_text": "Light and heavy pistols are categorized by the caliber of the bullet they fire. Some operators prefer the low recoil and high mag capacity possible with a low-caliber round.",
+    "platform": ["drone", "vehicle"]
   },
   {
     "name": "Heavy Pistol",
@@ -21,7 +22,8 @@
     "trauma_die": "1d6",
     "trauma_roll": "x3",
     "traits": [],
-    "effect_text": "A heavier-caliber pistol that trades magazine capacity for more certainty in dropping targets."
+    "effect_text": "A heavier-caliber pistol that trades magazine capacity for more certainty in dropping targets.",
+    "platform": ["drone", "vehicle"]
   },
   {
     "name": "Taser Pistol",
@@ -33,7 +35,8 @@
     "trauma_die": null,
     "trauma_roll": null,
     "traits": ["non-lethal"],
-    "effect_text": "Taser pistols cover a family of ranged non-lethal weapons small and light enough to carry concealed. Most rely on electrical shocks to drop a target; they inflict non-lethal damage and cannot make Traumatic Hits."
+    "effect_text": "Taser pistols cover a family of ranged non-lethal weapons small and light enough to carry concealed. Most rely on electrical shocks to drop a target; they inflict non-lethal damage and cannot make Traumatic Hits.",
+    "platform": ["drone", "vehicle"]
   },
   {
     "name": "Submachine Gun",
@@ -45,7 +48,8 @@
     "trauma_die": "1d6",
     "trauma_roll": "x2",
     "traits": ["burst fire"],
-    "effect_text": "Submachine guns are popular for their small form factor and convenient burst fire. Burst fire expends three rounds to gain +2 to hit and damage rolls."
+    "effect_text": "Submachine guns are popular for their small form factor and convenient burst fire. Burst fire expends three rounds to gain +2 to hit and damage rolls.",
+    "platform": ["drone", "vehicle"]
   },
   {
     "name": "Shotgun",
@@ -57,7 +61,8 @@
     "trauma_die": "1d10",
     "trauma_roll": "x3",
     "traits": [],
-    "effect_text": "A simple double-barrel shotgun that can be found under the counter of practically every bar and shop. Ranges and damages given are for shot shells; slugs double ranges but apply -1 to hit."
+    "effect_text": "A simple double-barrel shotgun that can be found under the counter of practically every bar and shop. Ranges and damages given are for shot shells; slugs double ranges but apply -1 to hit.",
+    "platform": ["drone", "vehicle"]
   },
   {
     "name": "Semi-Auto Shotgun",
@@ -69,7 +74,8 @@
     "trauma_die": "1d10",
     "trauma_roll": "x3",
     "traits": [],
-    "effect_text": "A semi-automatic shotgun with higher magazine capacity than a basic model. Ranges and damages given are for shot shells; slugs double ranges but apply -1 to hit."
+    "effect_text": "A semi-automatic shotgun with higher magazine capacity than a basic model. Ranges and damages given are for shot shells; slugs double ranges but apply -1 to hit.",
+    "platform": ["drone", "vehicle"]
   },
   {
     "name": "Combat Shotgun",
@@ -81,7 +87,8 @@
     "trauma_die": "1d10",
     "trauma_roll": "x3",
     "traits": ["burst fire"],
-    "effect_text": "A burst-fire capable combat shotgun with finer tolerances and more elaborate machining. Burst fire expends three rounds to gain +2 to hit and damage rolls."
+    "effect_text": "A burst-fire capable combat shotgun with finer tolerances and more elaborate machining. Burst fire expends three rounds to gain +2 to hit and damage rolls.",
+    "platform": ["drone", "vehicle"]
   },
   {
     "name": "Rifle",
@@ -93,7 +100,8 @@
     "trauma_die": "1d8",
     "trauma_roll": "x3",
     "traits": [],
-    "effect_text": "A standard semi-automatic rifle with good range and stopping power from its heavier caliber rounds."
+    "effect_text": "A standard semi-automatic rifle with good range and stopping power from its heavier caliber rounds.",
+    "platform": ["drone", "vehicle"]
   },
   {
     "name": "Combat Rifle",
@@ -105,7 +113,8 @@
     "trauma_die": "1d8",
     "trauma_roll": "x3",
     "traits": ["burst fire"],
-    "effect_text": "A rifle equipped with a burst-fire selector that trades range for higher ammo capacity. Burst fire expends three rounds to gain +2 to hit and damage rolls."
+    "effect_text": "A rifle equipped with a burst-fire selector that trades range for higher ammo capacity. Burst fire expends three rounds to gain +2 to hit and damage rolls.",
+    "platform": ["drone", "vehicle"]
   },
   {
     "name": "Sniper Rifle",
@@ -117,7 +126,8 @@
     "trauma_die": "1d10",
     "trauma_roll": "x4",
     "traits": ["stationary"],
-    "effect_text": "Often nothing more than a bolt-action rifle with expensive tuning and optics. If not fired from a stationary rest, its statistics are the same as a normal rifle."
+    "effect_text": "Often nothing more than a bolt-action rifle with expensive tuning and optics. If not fired from a stationary rest, its statistics are the same as a normal rifle.",
+    "platform": ["drone", "vehicle"]
   },
   {
     "name": "Automatic Rifle",
@@ -129,7 +139,8 @@
     "trauma_die": "1d10",
     "trauma_roll": "x3",
     "traits": ["suppress"],
-    "effect_text": "Barely man-portable firearms designed to hurl vast amounts of lead. Can use suppressive fire if properly braced. Each round of ammunition costs $50."
+    "effect_text": "Barely man-portable firearms designed to hurl vast amounts of lead. Can use suppressive fire if properly braced. Each round of ammunition costs $50.",
+    "platform": ["drone", "vehicle"]
   },
   {
     "name": "Anti-Materiel Rifle",
@@ -141,7 +152,8 @@
     "trauma_die": "1d12",
     "trauma_roll": "x3",
     "traits": ["traumatic", "stationary"],
-    "effect_text": "20mm rounds sufficient to punch through lighter armor plating, concrete walls, and full body conversion cyborgs. Use of a secure firing rest is recommended for best results. If not fired from a stationary rest, its statistics are the same as a normal rifle."
+    "effect_text": "20mm rounds sufficient to punch through lighter armor plating, concrete walls, and full body conversion cyborgs. Use of a secure firing rest is recommended for best results. If not fired from a stationary rest, its statistics are the same as a normal rifle.",
+    "platform": ["drone", "vehicle"]
   },
   {
     "name": "Grenade Launcher",
@@ -153,7 +165,8 @@
     "trauma_die": null,
     "trauma_roll": null,
     "traits": [],
-    "effect_text": "Can launch specially-designed grenades to the listed range, targeting them as if thrown normally. Stand-alone models are available for vehicle or drone mounting. Grenades cost and function the same as their regular equivalents."
+    "effect_text": "Can launch specially-designed grenades to the listed range, targeting them as if thrown normally. Stand-alone models are available for vehicle or drone mounting. Grenades cost and function the same as their regular equivalents.",
+    "platform": ["drone", "vehicle"]
   },
   {
     "name": "Heavy Machine Gun",
@@ -165,7 +178,8 @@
     "trauma_die": "1d12",
     "trauma_roll": "x3",
     "traits": ["traumatic", "suppress", "$100/round"],
-    "effect_text": "Old tech, but reliable. Without a fixed firing position or vehicle mount, recoil makes them almost uncontrollable. Each round of ammunition costs $100."
+    "effect_text": "Old tech, but reliable. Without a fixed firing position or vehicle mount, recoil makes them almost uncontrollable. Each round of ammunition costs $100.",
+    "platform": ["drone", "vehicle"]
   },
   {
     "name": "Rocket Launcher",
@@ -177,7 +191,8 @@
     "trauma_die": "1d10",
     "trauma_roll": "x3",
     "traits": ["traumatic", "single use"],
-    "effect_text": "Single-shot disposable launchers. -4 hit penalty against human-sized targets, but inflicts frag grenade damage within 5 meters of impact. Anti-armor warheads do double damage to vehicles but lose the frag bonus."
+    "effect_text": "Single-shot disposable launchers. -4 hit penalty against human-sized targets, but inflicts frag grenade damage within 5 meters of impact. Anti-armor warheads do double damage to vehicles but lose the frag bonus.",
+    "platform": ["drone", "vehicle"]
   },
   {
     "name": "Mortar",
@@ -189,7 +204,8 @@
     "trauma_die": "1d12",
     "trauma_roll": "x3",
     "traits": ["indirect fire"],
-    "effect_text": "Can lob indirect fire over buildings and obstacles. Minimum range 20m. Always targets AC 20 at first, but each round at the same target grants +1 hit bonus with a forward spotter. Acts as frag grenade with 10m radius. Armor doesn't lessen harm. Rounds cost $50 each."
+    "effect_text": "Can lob indirect fire over buildings and obstacles. Minimum range 20m. Always targets AC 20 at first, but each round at the same target grants +1 hit bonus with a forward spotter. Acts as frag grenade with 10m radius. Armor doesn't lessen harm. Rounds cost $50 each.",
+    "platform": ["drone", "vehicle"]
   },
   {
     "name": "Drone Cannon",
@@ -201,7 +217,8 @@
     "trauma_die": "1d10",
     "trauma_roll": "x3",
     "traits": ["traumatic", "$100/round"],
-    "effect_text": "Heavy semi-automatic weapons too bulky for human portability. A round of firing costs $100 worth of ammunition."
+    "effect_text": "Heavy semi-automatic weapons too bulky for human portability. A round of firing costs $100 worth of ammunition.",
+    "platform": ["drone", "vehicle"]
   },
   {
     "name": "Headshot Pod",
@@ -213,7 +230,8 @@
     "trauma_die": "1d20",
     "trauma_roll": "x4",
     "traits": ["traumatic", "guided"],
-    "effect_text": "Guided missiles for mounted deployment. Always targets AC 10, but requires two full consecutive rounds of aiming at a visible target before firing on the third round. Bystanders within 5m take frag grenade damage. Each missile costs $2,000."
+    "effect_text": "Guided missiles for mounted deployment. Always targets AC 10, but requires two full consecutive rounds of aiming at a visible target before firing on the third round. Bystanders within 5m take frag grenade damage. Each missile costs $2,000.",
+    "platform": ["drone", "vehicle"]
   },
   {
     "name": "Main Tank Gun",
@@ -225,7 +243,8 @@
     "trauma_die": "1d20",
     "trauma_roll": "x4",
     "traits": ["traumatic", "$1000/round"],
-    "effect_text": "Always targets AC 10. Anyone within 10m of impact takes 1d20 damage if not behind heavy cover. Cannot be mounted on aircraft or anything smaller than a tank. Each round costs $1,000."
+    "effect_text": "Always targets AC 10. Anyone within 10m of impact takes 1d20 damage if not behind heavy cover. Cannot be mounted on aircraft or anything smaller than a tank. Each round costs $1,000.",
+    "platform": ["vehicle"]
   },
   {
     "name": "Mounted Autogun",
@@ -237,7 +256,8 @@
     "trauma_die": "1d12",
     "trauma_roll": "x2",
     "traits": ["traumatic", "suppress", "$100/round"],
-    "effect_text": "A drone cannon's big brother, for larger platforms. Each round of firing costs $100."
+    "effect_text": "A drone cannon's big brother, for larger platforms. Each round of firing costs $100.",
+    "platform": ["vehicle"]
   },
   {
     "name": "Shrieker Gun",
@@ -249,6 +269,7 @@
     "trauma_die": null,
     "trauma_roll": null,
     "traits": ["non-lethal", "suppress"],
-    "effect_text": "Sonic cannons used for crowd control and non-lethal suppression. Highly effective against unprotected targets, but military-grade ear protection or cyber-ear dampers render the weapon useless."
+    "effect_text": "Sonic cannons used for crowd control and non-lethal suppression. Highly effective against unprotected targets, but military-grade ear protection or cyber-ear dampers render the weapon useless.",
+    "platform": ["vehicle"]
   }
 ]

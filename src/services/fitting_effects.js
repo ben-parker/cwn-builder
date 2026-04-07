@@ -1,24 +1,20 @@
-let drone = {};
-
-const addModEffect = function(mod, currentDrone) {
-    drone = currentDrone;
+const addModEffect = function(mod, drone) {
     if (mod.type === 'fitting') {
-        updateFitting('add', mod.name);
+        updateFitting('add', mod.name, drone);
     } else {
-        updateMod('add', mod.name);
+        updateMod('add', mod.name, drone);
     }
 };
 
-const removeModEffect = function(mod, currentDrone) {
-    drone = currentDrone;
+const removeModEffect = function(mod, drone) {
     if (mod.type === 'fitting') {
-        updateFitting('remove', mod.name);
+        updateFitting('remove', mod.name, drone);
     } else {
-        updateMod('remove', mod.name);
+        updateMod('remove', mod.name, drone);
     }
 };
 
-const updateFitting = function(action, fittingName) {
+const updateFitting = function(action, fittingName, drone) {
     switch(fittingName) {
         case 'Ablative Code Buffer':
             break;
@@ -46,9 +42,9 @@ const updateFitting = function(action, fittingName) {
             break;
         case 'Enhanced Structure':
             if (action === 'add')
-                enhancedStructure.add();
+                enhancedStructure.add(drone);
             else if (action === 'remove')
-                enhancedStructure.remove();
+                enhancedStructure.remove(drone);
             break;
         case 'Extended Range':
             break;
@@ -56,9 +52,9 @@ const updateFitting = function(action, fittingName) {
             break;
         case 'Improved Armor':
             if (action === 'add')
-                improvedArmor.add();
+                improvedArmor.add(drone);
             else if (action === 'remove')
-                improvedArmor.remove();
+                improvedArmor.remove(drone);
             break;
         case 'Improved Targeting Logic':
             break;
@@ -88,180 +84,54 @@ const updateFitting = function(action, fittingName) {
             break;
         case 'Weapon Hardpoint':
             if (action === 'add')
-                weaponHardpoint.add();
+                weaponHardpoint.add(drone);
             else if (action === 'remove')
-                weaponHardpoint.remove();
+                weaponHardpoint.remove(drone);
             break;
-        
+
     }
 };
 
-const updateMod = function(action, modName) {
+const updateMod = function(action, modName, drone) {
     switch (modName) {
         case 'Additional Fitting':
-            action === 'add' ? additionalFitting.add() : additionalFitting.remove();
+            action === 'add' ? additionalFitting.add(drone) : additionalFitting.remove(drone);
             break;
         case 'Additional Hardpoint':
-            action === 'add' ? additionalHardpoint.add() : additionalHardpoint.remove();
+            action === 'add' ? additionalHardpoint.add(drone) : additionalHardpoint.remove(drone);
             break;
         case 'Battery Swapping':
             break;
         case 'Boosted Engine':
-            action === 'add' ? boostedEngine.add() : boostedEngine.remove();
+            action === 'add' ? boostedEngine.add(drone) : boostedEngine.remove(drone);
             break;
         case 'Heavy Plating':
-            action === 'add' ? heavyPlating.add() : heavyPlating.remove();
+            action === 'add' ? heavyPlating.add(drone) : heavyPlating.remove(drone);
             break;
         case 'Quick Launch':
             break;
         case 'Redundant Systems':
-            action === 'add' ? redundantSystems.add() : redundantSystems.remove();
+            action === 'add' ? redundantSystems.add(drone) : redundantSystems.remove(drone);
             break;
         case 'Stripped Fittings':
-            action === 'add' ? strippedFittings.add() : strippedFittings.remove();
+            action === 'add' ? strippedFittings.add(drone) : strippedFittings.remove(drone);
             break;
-
-    }
-};
-
-const ablativeCodeBuffer = {
-    add() {
-
-    },
-    remove() {
-
-    }
-};
-
-const altitudeBoostUnit = {
-    add() {
-
-    },
-    remove() {
-
-    }
-};
-
-const ammoCaddy = {
-    add() {
-
-    },
-    remove() {
-
-    }
-};
-
-const ammoSupply = {
-    add() {
-
-    },
-    remove() {
-
-    }
-};
-
-const assistedBoostBurner = {
-    add() {
-
-    },
-    remove() {
-
-    }
-};
-
-const cargoSpace = {
-    add() {
-
-    },
-    remove() {
-
-    }
-};
-
-const commandDeckFollow = {
-    add() {
-
-    },
-    remove() {
-
-    }
-};
-
-const commandDeckKill = {
-    add() {
-
-    },
-    remove() {
-
-    }
-};
-
-const commandDeckPatrol = {
-    add() {
-
-    },
-    remove() {
-
-    }
-};
-
-const commandDeckWatch = {
-    add() {
-
-    },
-    remove() {
-
-    }
-};
-
-const emergencyEvacLitter = {
-    add() {
-
-    },
-    remove() {
-
-    }
-};
-
-const emissionsShielding = {
-    add() {
-
-    },
-    remove() {
 
     }
 };
 
 const enhancedStructure = {
-    add() {
-        drone.extraHp ??= 0;        
+    add(drone) {
+        drone.extraHp ??= 0;
         drone.extraHp += Math.ceil(drone.hp * 0.25);
     },
-    remove() {
+    remove(drone) {
         drone.extraHp -= Math.ceil(drone.hp * 0.25);
     }
 };
 
-const extendedRange = {
-    add() {
-
-    },
-    remove() {
-
-    }
-};
-
-const gliderGrips = {
-    add() {
-
-    },
-    remove() {
-
-    }
-};
-
 const improvedArmor = {
-    add() {
+    add(drone) {
         if (!parseInt(drone.encumbrance))
             return;
 
@@ -271,7 +141,7 @@ const improvedArmor = {
         drone.extraEncumbrance ??= 0
         drone.extraEncumbrance += 1;
     },
-    remove() {
+    remove(drone) {
         if (!parseInt(drone.encumbrance))
             return;
 
@@ -280,139 +150,22 @@ const improvedArmor = {
     }
 };
 
-const improvedTargetingLogic = {
-    add() {
-
-    },
-    remove() {
-
-    }
-};
-
-const laserComms = {
-    add() {
-
-    },
-    remove() {
-
-    }
-};
-
-const manipulatorTendrils = {
-    add() {
-
-    },
-    remove() {
-
-    }
-};
-
-const memoryBanks = {
-    add() {
-
-    },
-    remove() {
-
-    }
-};
-
-const noTouchWeb = {
-    add() {
-
-    },
-    remove() {
-
-    }
-};
-
-const sleepMode = {
-    add() {
-
-    },
-    remove() {
-
-    }
-};
-
-const stealthPackage = {
-    add() {
-
-    },
-    remove() {
-
-    }
-};
-
-const suicideCharge = {
-    add() {
-
-    },
-    remove() {
-
-    }
-};
-
-const telescopicOptics = {
-    add() {
-
-    },
-    remove() {
-
-    }
-};
-
-const thermalOptics = {
-    add() {
-
-    },
-    remove() {
-
-    }
-};
-
-const traumaResponseSuite = {
-    add() {
-
-    },
-    remove() {
-
-    }
-};
-
-const voiceBroadcast = {
-    add() {
-
-    },
-    remove() {
-
-    }
-};
-
-const wallcrawler = {
-    add() {
-
-    },
-    remove() {
-
-    }
-};
-
 const weaponHardpoint = {
-    add() {
+    add(drone) {
         drone.extraHardpoints ??= 0;
         drone.extraHardpoints += 1;
 
         drone.extraFittings ??= 0;
         drone.extraFittings += 1;
     },
-    remove() {
+    remove(drone) {
         drone.extraHardpoints -= 1;
         drone.extraFittings -= 1;
     }
 };
 
 const additionalFitting = {
-    add() {
+    add(drone) {
         drone.extraMaxFittings ??= 0;
         drone.extraMaxFittings += 1;
         if (parseInt(drone.encumbrance)) {
@@ -420,7 +173,7 @@ const additionalFitting = {
             drone.extraEncumbrance += 1;
         }
     },
-    remove() {
+    remove(drone) {
         drone.extraMaxFittings -= 1;
         if (parseInt(drone.encumbrance)) {
             drone.extraEncumbrance -= 1;
@@ -429,7 +182,7 @@ const additionalFitting = {
 };
 
 const additionalHardpoint = {
-    add() {
+    add(drone) {
         drone.extraHardpoints ??= 0;
         drone.extraHardpoints += 1;
         if (parseInt(drone.encumbrance)) {
@@ -437,7 +190,7 @@ const additionalHardpoint = {
             drone.extraEncumbrance += 1;
         }
     },
-    remove() {
+    remove(drone) {
         drone.extraHardpoints -= 1;
         if (parseInt(drone.encumbrance)) {
             drone.extraEncumbrance -= 1;
@@ -445,27 +198,18 @@ const additionalHardpoint = {
     }
 };
 
-const batterySwapping = {
-    add() {
-
-    },
-    remove() {
-
-    }
-};
-
 const boostedEngine = {
-    add() {
+    add(drone) {
         drone.extraMove ??= 0;
         drone.extraMove += 10;
     },
-    remove() {
+    remove(drone) {
         drone.extraMove -= 10;
     }
 };
 
 const heavyPlating = {
-    add() {
+    add(drone) {
         drone.extraMove ??= 0;
         drone.extraMove += -5;
 
@@ -477,7 +221,7 @@ const heavyPlating = {
             drone.extraEncumbrance += 1;
         }
     },
-    remove() {
+    remove(drone) {
         drone.extraMove += 5;
         drone.extraAc -= 2;
 
@@ -487,25 +231,16 @@ const heavyPlating = {
     }
 };
 
-const quickLaunch = {
-    add() {
-
-    },
-    remove() {
-
-    }
-};
-
 const redundantSystems = {
-    add() {
-        drone.extraHp ??= 0;        
+    add(drone) {
+        drone.extraHp ??= 0;
         drone.extraHp += Math.ceil(drone.hp * 0.25);
         if (parseInt(drone.encumbrance)) {
             drone.extraEncumbrance ??= 0;
             drone.extraEncumbrance += 1;
         }
     },
-    remove() {
+    remove(drone) {
         drone.extraHp -= Math.ceil(drone.hp * 0.25);
         if (parseInt(drone.encumbrance)) {
             drone.extraEncumbrance -= 1;
@@ -514,7 +249,7 @@ const redundantSystems = {
 };
 
 const strippedFittings = {
-    add() {
+    add(drone) {
         drone.extraMaxFittings ??= 0;
         drone.extraMaxFittings += -1;
         if (parseInt(drone.encumbrance) && drone.encumbrance > 1) {
@@ -522,7 +257,7 @@ const strippedFittings = {
             drone.extraEncumbrance += -1;
         }
     },
-    remove() {
+    remove(drone) {
         drone.extraMaxFittings += 1;
         if (parseInt(drone.encumbrance) && drone.extraEncumbrance < 0) {
             drone.extraEncumbrance -= -1;

@@ -11,6 +11,8 @@ export const useDroneStore = defineStore('drones', () => {
   const characterLevel = ref(null)
   const hasDronePilotFocus = ref(false)
 
+  const isLoaded = ref(false)
+
   const droneMods = computed(() => [...fittings.value, ...mods.value])
 
   const droneBudget = computed(() => {
@@ -19,6 +21,7 @@ export const useDroneStore = defineStore('drones', () => {
   })
 
   async function loadDroneData() {
+    if (isLoaded.value) return
     const dronesResponse = await fetch('data/drones.json')
     drones.value = JSON.parse(await dronesResponse.text())
 
@@ -27,6 +30,7 @@ export const useDroneStore = defineStore('drones', () => {
 
     const modsResponse = await fetch('data/drone_mods.json')
     mods.value = JSON.parse(await modsResponse.text()).map(m => ({...m, type: "mod" }))
+    isLoaded.value = true
   }
 
   return { drones, fittings, mods, loadDroneData, droneMods, characterLevel, hasDronePilotFocus, droneBudget }

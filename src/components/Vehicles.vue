@@ -1,19 +1,19 @@
 <script setup>
 import { ref, computed, nextTick, watch, onMounted, onUnmounted, toRaw } from 'vue'
-import { useDroneStore } from '@/stores/drones'
+import { useVehicleStore } from '@/stores/vehicles'
 import { useWeaponStore } from '@/stores/weapons'
-import Drone from '@/components/Drone.vue'
+import Vehicle from '@/components/Vehicle.vue'
 
-const store = useDroneStore()
+const store = useVehicleStore()
 const weaponStore = useWeaponStore()
-await Promise.all([store.loadDroneData(), weaponStore.loadWeaponData()])
+await Promise.all([store.loadVehicleData(), weaponStore.loadWeaponData()])
 
-const droneList = ref([])
+const vehicleList = ref([])
 const costs = ref([])
 const selectedIndex = ref(null)
 const tableRef = ref(null)
 const arrowTop = ref(0)
-let nextDroneId = 0
+let nextVehicleId = 0
 
 const updateArrowPosition = () => {
     if (selectedIndex.value === null || !tableRef.value) return;
@@ -29,9 +29,9 @@ watch(selectedIndex, () => {
     nextTick(updateArrowPosition);
 });
 
-const newDrone = (idx) => {
-    droneList.value.push({ ...structuredClone(toRaw(store.drones[idx])), _uid: nextDroneId++ });
-    costs.value.push(store.drones[idx].cost);
+const newVehicle = (idx) => {
+    vehicleList.value.push({ ...structuredClone(toRaw(store.vehicles[idx])), _uid: nextVehicleId++ });
+    costs.value.push(store.vehicles[idx].cost);
 };
 
 const browseRef = ref(null)
@@ -52,7 +52,7 @@ onUnmounted(() => document.removeEventListener('click', onClickOutside));
 const money = (cost) => cost < 0 ? "-$" + Math.abs(cost).toLocaleString("en-US") : "$" + cost.toLocaleString("en-US")
 
 const totalCostRaw = computed(() => costs.value.reduce((prev, cur) => prev + cur, 0))
-const allDroneCost = computed(() => money(totalCostRaw.value))
+const allVehicleCost = computed(() => money(totalCostRaw.value))
 
 const setLevel = (val) => {
     const n = parseInt(val)
@@ -60,8 +60,8 @@ const setLevel = (val) => {
 }
 
 const budgetRemaining = computed(() => {
-    if (!store.droneBudget) return null
-    return store.droneBudget - totalCostRaw.value
+    if (!store.vehicleBudget) return null
+    return store.vehicleBudget - totalCostRaw.value
 })
 
 const outOfPocket = computed(() => {
@@ -69,45 +69,29 @@ const outOfPocket = computed(() => {
     return Math.max(0, -budgetRemaining.value)
 })
 
-const selectedDrone = computed(() => {
+const selectedVehicle = computed(() => {
     if (selectedIndex.value === null) return null;
-    return store.drones[selectedIndex.value];
+    return store.vehicles[selectedIndex.value];
 });
 
-const portabilityNote = (drone) => {
-    if (drone.encumbrance === '-') return 'Non-portable — too large to carry';
-    const enc = parseInt(drone.encumbrance);
-    if (enc === 1) return 'Portable — small enough to carry in one hand';
-    if (enc <= 3) return 'Portable — requires two hands to carry';
-    return 'Portable — requires a whole-body effort to haul';
-};
-
-const weaponMount = (drone) => {
-    if (drone.encumbrance === '-') return 'Heavy weapons (GM discretion)';
-    const enc = parseInt(drone.encumbrance);
-    if (enc <= 3) return 'Pistol-sized only';
-    return 'Rifle-sized or smaller';
-};
-
-const moveType = (drone) => {
-    if (drone.move.includes('fly')) return 'Flying';
-    if (drone.move.includes('swim')) return 'Aquatic';
-    return 'Ground';
-};
+const armorDisplay = (vehicle) => {
+    if (typeof vehicle.armor === 'string') return vehicle.armor
+    return vehicle.armor
+}
 </script>
 
 <template>
-    <div id="drone-wrapper">
+    <div id="vehicle-wrapper">
         <div class="total-cost-bar">
             <div class="cost-section">
                 <span class="total-cost-label">Total Cost</span>
-                <span class="total-cost-value">{{ allDroneCost }}</span>
+                <span class="total-cost-value">{{ allVehicleCost }}</span>
             </div>
 
-            <div v-if="store.droneBudget > 0" class="budget-section">
+            <div v-if="store.vehicleBudget > 0" class="budget-section">
                 <div class="budget-item">
                     <span class="budget-label">Budget</span>
-                    <span class="budget-value">{{ money(store.droneBudget) }}</span>
+                    <span class="budget-value">{{ money(store.vehicleBudget) }}</span>
                 </div>
                 <div class="budget-item">
                     <span class="budget-label">Remaining</span>
@@ -121,9 +105,9 @@ const moveType = (drone) => {
 
             <div class="char-section">
                 <div class="char-field">
-                    <label class="char-label" for="char-level">Level</label>
+                    <label class="char-label" for="vehicle-char-level">Level</label>
                     <select
-                        id="char-level"
+                        id="vehicle-char-level"
                         class="char-input"
                         :value="store.characterLevel ?? ''"
                         @change="setLevel($event.target.value)"
@@ -133,8 +117,8 @@ const moveType = (drone) => {
                     </select>
                 </div>
                 <label class="char-checkbox">
-                    <input type="checkbox" v-model="store.hasDronePilotFocus" />
-                    <span>Drone Pilot</span>
+                    <input type="checkbox" v-model="store.hasAceDriverFocus" />
+                    <span>Ace Driver</span>
                 </label>
             </div>
         </div>
@@ -145,101 +129,122 @@ const moveType = (drone) => {
                     <thead>
                         <tr>
                             <th class="col-action"></th>
-                            <th class="col-name">Drone</th>
+                            <th class="col-name">Vehicle</th>
                             <th>Cost</th>
+                            <th>Spd</th>
+                            <th>Arm.</th>
                             <th>AC</th>
                             <th>TT</th>
                             <th>HP</th>
-                            <th>Fit.</th>
-                            <th>Move</th>
+                            <th>Crew</th>
+                            <th>Pow.</th>
+                            <th>Mass</th>
+                            <th>Size</th>
                             <th>Hrd.</th>
-                            <th>Enc.</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr
-                            v-for="(drone, index) in store.drones"
+                            v-for="(vehicle, index) in store.vehicles"
                             :key="index"
                             :class="{ 'row-selected': selectedIndex === index }"
                             @click="selectRow(index)"
                         >
                             <td class="col-action">
-                                <button class="circle-add-btn" @click.stop="newDrone(index)" title="Add drone">+</button>
+                                <button class="circle-add-btn cab-yellow" @click.stop="newVehicle(index)" title="Add vehicle">+</button>
                             </td>
-                            <td class="col-name">{{ drone.name }}</td>
-                            <td>{{ money(drone.cost) }}</td>
-                            <td>{{ drone.ac }}</td>
-                            <td>{{ drone.tt }}</td>
-                            <td>{{ drone.hp }}</td>
-                            <td>{{ drone.fittings }}</td>
-                            <td>{{ drone.move }}</td>
-                            <td>{{ drone.hardpoints }}</td>
-                            <td>{{ drone.encumbrance }}</td>
+                            <td class="col-name">
+                                {{ vehicle.name }}
+                                <span v-if="vehicle.contact_only" class="contact-badge" title="Requires a suitable Contact to acquire">@</span>
+                            </td>
+                            <td>{{ money(vehicle.cost) }}</td>
+                            <td>{{ vehicle.speed }}</td>
+                            <td :title="vehicle.armor_note || ''">{{ armorDisplay(vehicle) }}</td>
+                            <td>{{ vehicle.ac }}</td>
+                            <td>{{ vehicle.tt }}</td>
+                            <td>{{ vehicle.hp }}</td>
+                            <td>{{ vehicle.crew }}</td>
+                            <td>{{ vehicle.power }}</td>
+                            <td>{{ vehicle.mass }}</td>
+                            <td>{{ vehicle.size }}</td>
+                            <td>{{ vehicle.hardpoints }}</td>
                         </tr>
                     </tbody>
                 </table>
             </div>
 
-            <div v-if="selectedDrone" class="detail-col">
+            <div v-if="selectedVehicle" class="detail-col">
                 <div class="speech-arrow" :style="{ top: arrowTop + 'px' }"></div>
                 <div class="detail-panel">
-                    <h3 class="detail-name">{{ selectedDrone.name }} <span class="detail-base-cost">{{ money(selectedDrone.cost) }}</span></h3>
+                    <h3 class="detail-name">
+                        {{ selectedVehicle.name }}
+                        <span v-if="selectedVehicle.contact_only" class="contact-badge" title="Requires a suitable Contact to acquire">@</span>
+                        <span class="detail-base-cost">{{ money(selectedVehicle.cost) }}</span>
+                    </h3>
                     <div class="detail-grid">
                         <div class="detail-item">
-                            <span class="detail-label">Type</span>
-                            <span class="detail-value">{{ moveType(selectedDrone) }}</span>
+                            <span class="detail-label">Size</span>
+                            <span class="detail-value">{{ selectedVehicle.size === 'S' ? 'Small' : selectedVehicle.size === 'M' ? 'Medium' : 'Large' }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Speed</span>
+                            <span class="detail-value">{{ selectedVehicle.speed }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Armor</span>
+                            <span class="detail-value" :title="selectedVehicle.armor_note || ''">{{ armorDisplay(selectedVehicle) }}</span>
                         </div>
                         <div class="detail-item">
                             <span class="detail-label">AC</span>
-                            <span class="detail-value">{{ selectedDrone.ac }}</span>
+                            <span class="detail-value">{{ selectedVehicle.ac }}</span>
                         </div>
                         <div class="detail-item">
                             <span class="detail-label">Trauma Target</span>
-                            <span class="detail-value">{{ selectedDrone.tt }}</span>
+                            <span class="detail-value">{{ selectedVehicle.tt }}</span>
                         </div>
                         <div class="detail-item">
                             <span class="detail-label">HP</span>
-                            <span class="detail-value">{{ selectedDrone.hp }}</span>
+                            <span class="detail-value">{{ selectedVehicle.hp }}</span>
                         </div>
                         <div class="detail-item">
-                            <span class="detail-label">Fittings</span>
-                            <span class="detail-value">{{ selectedDrone.fittings }}</span>
+                            <span class="detail-label">Crew</span>
+                            <span class="detail-value">{{ selectedVehicle.crew }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Power</span>
+                            <span class="detail-value">{{ selectedVehicle.power }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Mass</span>
+                            <span class="detail-value">{{ selectedVehicle.mass }}</span>
                         </div>
                         <div class="detail-item">
                             <span class="detail-label">Hardpoints</span>
-                            <span class="detail-value">{{ selectedDrone.hardpoints }}</span>
+                            <span class="detail-value">{{ selectedVehicle.hardpoints }}</span>
                         </div>
-                        <div class="detail-item">
-                            <span class="detail-label">Move</span>
-                            <span class="detail-value">{{ selectedDrone.move }}</span>
-                        </div>
-                        <div class="detail-item detail-full">
-                            <span class="detail-label">Portability</span>
-                            <span class="detail-value">{{ portabilityNote(selectedDrone) }}</span>
-                        </div>
-                        <div class="detail-item detail-full">
-                            <span class="detail-label">Weapon Mount</span>
-                            <span class="detail-value">{{ weaponMount(selectedDrone) }}</span>
+                        <div v-if="selectedVehicle.armor_note" class="detail-item detail-full">
+                            <span class="detail-label">Armor Note</span>
+                            <span class="detail-value detail-note">{{ selectedVehicle.armor_note }}</span>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="drone-cards">
-            <Drone v-for="(drone, index) in droneList"
-                :key="drone._uid"
+        <div class="vehicle-cards">
+            <Vehicle v-for="(vehicle, index) in vehicleList"
+                :key="vehicle._uid"
                 :index="index"
-                @remove-drone="(idx) => { droneList.splice(idx, 1); costs.splice(idx, 1); }"
+                @remove-vehicle="(idx) => { vehicleList.splice(idx, 1); costs.splice(idx, 1); }"
                 @updated="(data) => costs[data.index] = data.cost"
-                :drone="droneList[index]"
+                :vehicle="vehicleList[index]"
             />
         </div>
     </div>
 </template>
 
 <style scoped>
-#drone-wrapper {
+#vehicle-wrapper {
     width: 100%;
     display: flex;
     flex-direction: column;
@@ -273,10 +278,10 @@ const moveType = (drone) => {
 }
 
 .total-cost-value {
-    color: var(--cwn-cyan);
+    color: var(--cwn-yellow);
     font-size: 1.4em;
     font-weight: bold;
-    text-shadow: var(--cwn-glow-cyan);
+    text-shadow: var(--cwn-glow-yellow);
 }
 
 /* Budget section */
@@ -313,7 +318,7 @@ const moveType = (drone) => {
 }
 
 .budget-value.out-of-pocket {
-    color: var(--cwn-yellow);
+    color: var(--cwn-magenta);
 }
 
 /* Character section */
@@ -351,8 +356,8 @@ const moveType = (drone) => {
 }
 
 .char-input:focus {
-    border-color: var(--cwn-cyan-dim);
-    box-shadow: var(--cwn-glow-cyan);
+    border-color: var(--cwn-yellow-dim);
+    box-shadow: var(--cwn-glow-yellow);
     outline: none;
 }
 
@@ -368,7 +373,7 @@ const moveType = (drone) => {
 }
 
 .char-checkbox input[type="checkbox"] {
-    accent-color: var(--cwn-cyan);
+    accent-color: var(--cwn-yellow);
     cursor: pointer;
 }
 
@@ -439,7 +444,15 @@ tbody tr:hover {
 
 tbody tr.row-selected {
     background: var(--cwn-bg-mute);
-    border-left: 2px solid var(--cwn-cyan);
+    border-left: 2px solid var(--cwn-yellow);
+}
+
+/* Contact badge */
+.contact-badge {
+    color: var(--cwn-magenta);
+    font-weight: bold;
+    font-size: 0.85em;
+    margin-left: 2px;
 }
 
 /* Detail panel + speech arrow */
@@ -459,7 +472,6 @@ tbody tr.row-selected {
     z-index: 1;
 }
 
-/* Border triangle (slightly larger, behind) */
 .speech-arrow::before {
     content: '';
     position: absolute;
@@ -469,10 +481,9 @@ tbody tr.row-selected {
     height: 0;
     border-top: 9px solid transparent;
     border-bottom: 9px solid transparent;
-    border-right: 14px solid rgba(0, 240, 255, 0.15);
+    border-right: 14px solid rgba(240, 224, 0, 0.15);
 }
 
-/* Fill triangle (on top) */
 .speech-arrow::after {
     content: '';
     position: absolute;
@@ -498,7 +509,7 @@ tbody tr.row-selected {
 
 .detail-name {
     display: block;
-    color: var(--cwn-cyan);
+    color: var(--cwn-yellow);
     font-size: 1em;
     font-weight: bold;
     margin-bottom: 12px;
@@ -540,8 +551,14 @@ tbody tr.row-selected {
     font-size: 0.9em;
 }
 
-/* Drone cards - flex wrap layout */
-.drone-cards {
+.detail-note {
+    font-size: 0.8em;
+    color: var(--cwn-text-muted);
+    font-style: italic;
+}
+
+/* Vehicle cards - flex wrap layout */
+.vehicle-cards {
     display: flex;
     flex-wrap: wrap;
     gap: 16px;

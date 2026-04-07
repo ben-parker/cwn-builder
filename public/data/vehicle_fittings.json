@@ -1,0 +1,203 @@
+[
+  {
+    "name": "Advanced Sensors",
+    "cost": 8000,
+    "power": 1,
+    "mass": 0,
+    "min_size": "S",
+    "effect_text": "The vehicle is equipped with night vision, infrared sensors, and short-range radar good up to twenty kilometers of airspace. It can be driven safely even in pitch darkness."
+  },
+  {
+    "name": "Afterburners",
+    "cost": 5000,
+    "power": 1,
+    "mass": 2,
+    "min_size": "S",
+    "effect_text": "Once per scene, as an On Turn action, boost the vehicle's Speed by 1 for five rounds."
+  },
+  {
+    "name": "Armor Plating",
+    "cost": 5000,
+    "power": 0,
+    "mass": 3,
+    "min_size": "S",
+    "effect_text": "Increase the vehicle's Armor rating by 3 points. Medium vehicles can apply this fitting twice, and Large ones can apply it three times."
+  },
+  {
+    "name": "Cargo Space",
+    "cost": 0,
+    "power": 0,
+    "mass": 1,
+    "min_size": "S",
+    "effect_text": "This fitting can be taken multiple times. Each time it adds 50 kg of protected cargo space for Small vehicles, 500 kg for Medium ones, and 2 metric tons for Large ones."
+  },
+  {
+    "name": "Crash Pod",
+    "cost": 2500,
+    "power": 0,
+    "mass": 2,
+    "min_size": "M",
+    "effect_text": "If the vehicle crashes, the occupants can each reroll one failed crash save. If they make any of their saves, their HP can't be reduced below 1 point by the crash."
+  },
+  {
+    "name": "ECM Emitter",
+    "cost": 10000,
+    "power": 2,
+    "mass": 0,
+    "min_size": "M",
+    "effect_text": "On a successful hit roll by a headshot pod, rocket launcher, or other long-range guided projectile, the driver can make an opposed Int or Dex/Drive skill check against the attacker's combat skill. On a success, the attacker must reroll their hit roll and take the worst result."
+  },
+  {
+    "name": "Emissions Cloaking",
+    "cost": 10000,
+    "power": 1,
+    "mass": 2,
+    "min_size": "S",
+    "effect_text": "Once per day, for one hour, the vehicle can become almost invisible to infrared or radar. This cloak becomes useless if the vehicle is visually spotted by defenders."
+  },
+  {
+    "name": "Extra Durability",
+    "cost": 5000,
+    "power": 0,
+    "mass": 4,
+    "min_size": "M",
+    "effect_text": "The vehicle's maximum hit points increase by 25%, rounded up."
+  },
+  {
+    "name": "Extra Passengers",
+    "cost": 2500,
+    "power": 0,
+    "mass": 2,
+    "min_size": "S",
+    "effect_text": "Small vehicles add 1 Crew, Medium ones add 2, and Large ones add 4. This fitting can be taken multiple times, and any vehicle amenities such as crash pods or living quarters extend to these additional Crew as well."
+  },
+  {
+    "name": "Field Portable",
+    "cost": 1000,
+    "power": 0,
+    "mass": 2,
+    "min_size": "S",
+    "max_size": "M",
+    "effect_text": "Only Small or Medium vehicles can take this option, allowing them to be broken down into easily-portable parts packages. Small vehicles turn into 30 items of Encumbrance and Medium ones into 150. Disassembly takes 30 minutes for a Small vehicle and 3 hours for a Medium one, with reassembly taking four times as long."
+  },
+  {
+    "name": "Ghost Driver",
+    "cost": 2500,
+    "power": 1,
+    "mass": 1,
+    "min_size": "S",
+    "effect_text": "The driver can order the vehicle directly or by radio or phone to go to particular places at particular times or perform other simple, direct actions on a given schedule. The onboard expert system can handle traffic-related challenges, but has no real intelligence to process more complicated problems."
+  },
+  {
+    "name": "Hardpoint Support",
+    "cost": 5000,
+    "power": 1,
+    "mass": 1,
+    "min_size": "M",
+    "effect_text": "Additional power and structural support enable the addition of a hardpoint."
+  },
+  {
+    "name": "Jack Control Port",
+    "cost": 5000,
+    "power": 2,
+    "mass": 0,
+    "min_size": "S",
+    "effect_text": "The vehicle is wired to be controlled through a plugged-in cranial jack as well as a conventional wheel. While jacked in, the driver need only use a Move Action to control the vehicle rather than a Main Action."
+  },
+  {
+    "name": "Limpet Mount (Small)",
+    "cost": 5000,
+    "power": 0,
+    "mass": 3,
+    "min_size": "M",
+    "effect_text": "Mount a Small parasite vehicle. Modifying a vehicle to be mounted adds 10% to its base cost, but it can be launched even while the parent vehicle is underway. Parasite vehicles are destroyed if the parent is; otherwise, they take only half the damage the parent takes."
+  },
+  {
+    "name": "Limpet Mount (Medium)",
+    "cost": 10000,
+    "power": 0,
+    "mass": 6,
+    "min_size": "L",
+    "effect_text": "Mount a Medium parasite vehicle. Modifying a vehicle to be mounted adds 10% to its base cost, but it can be launched even while the parent vehicle is underway. Parasite vehicles are destroyed if the parent is; otherwise, they take only half the damage the parent takes."
+  },
+  {
+    "name": "Living Quarters",
+    "cost": 8000,
+    "power": 0,
+    "mass": 4,
+    "min_size": "L",
+    "effect_text": "Basic, cramped quarters are provided for sleeping, sanitation, and cooking for all crew. Permanent living in a vehicle costs and counts as a slum lifestyle, though occupants with the Ace Driver or Roamer Focus can treat it as middle-class for the same price."
+  },
+  {
+    "name": "Medbay",
+    "cost": 10000,
+    "power": 1,
+    "mass": 2,
+    "min_size": "M",
+    "effect_text": "Surgical tools and medical support are provided for up to one critically-injured patient at a time. A medbay counts as an emergency clinic for purposes of treating Major Injuries, if someone with at least Heal-0 is available to tend to the patient."
+  },
+  {
+    "name": "Offroad Package",
+    "cost": 5000,
+    "power": 1,
+    "mass": 3,
+    "min_size": "L",
+    "effect_text": "Winches, tire armor, chassis reinforcement, and other upgrades needed to go through all but the most impassable terrain."
+  },
+  {
+    "name": "Power System, Small",
+    "cost": 1000,
+    "power": -2,
+    "mass": 2,
+    "min_size": "S",
+    "effect_text": "Adds extra Power in battery capacity and computing support at the cost of an additional Mass burden. Provides +2 Power."
+  },
+  {
+    "name": "Power System, Medium",
+    "cost": 5000,
+    "power": -4,
+    "mass": 3,
+    "min_size": "M",
+    "effect_text": "Adds extra Power in battery capacity and computing support at the cost of an additional Mass burden. Provides +4 Power."
+  },
+  {
+    "name": "Power System, Large",
+    "cost": 10000,
+    "power": -8,
+    "mass": 5,
+    "min_size": "L",
+    "effect_text": "Adds extra Power in battery capacity and computing support at the cost of an additional Mass burden. Provides +8 Power."
+  },
+  {
+    "name": "Sealed Atmosphere",
+    "cost": 5000,
+    "power": 1,
+    "mass": 1,
+    "min_size": "M",
+    "effect_text": "For up to two hours per day the vehicle can seal itself entirely from the outside atmosphere, with internal air tanks and positive pressure to keep out external toxins. At all times it can maintain a comfortable interior temperature in any terrestrial climate. Aircraft do not need this fitting to function normally at high altitudes."
+  },
+  {
+    "name": "Smuggler's Hold",
+    "cost": 1000,
+    "power": 0,
+    "mass": 1,
+    "min_size": "S",
+    "effect_text": "This fitting can be taken more than once. Adds 10 kg of concealed cargo space in Small vehicles, 100 kg in Medium ones, and 400 kg in Large ones. It can be detected only by taking the vehicle apart or by a difficulty 12 Wis/Notice or Wis/Drive skill check."
+  },
+  {
+    "name": "Targeting Board",
+    "cost": 2500,
+    "power": 1,
+    "mass": 1,
+    "min_size": "M",
+    "effect_text": "A single unified targeting board allows one gunner to manage up to three vehicle weapons instead of the one gun per gunner that would usually be allowed."
+  },
+  {
+    "name": "Tool Rack",
+    "cost": 2500,
+    "power": 0,
+    "mass": 2,
+    "min_size": "M",
+    "effect_text": "Equipped with welders, heavy tooling, winches, and room for up to 40 HP worth of spare parts. It can repair any vehicle and can be used as a makeshift workshop for related efforts."
+  }
+]

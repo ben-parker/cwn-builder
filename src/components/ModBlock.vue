@@ -1,6 +1,5 @@
 <script setup>
 import { computed } from 'vue'
-import Badge from 'primevue/badge'
 
 defineEmits(['removeMod'])
 
@@ -14,7 +13,10 @@ const props = defineProps({
     equipped: { type: Boolean, default: false },
     equipCount: { type: Number, default: 0 },
     stackable: { type: Boolean, default: false },
-    searchText: { type: String, default: '' }
+    searchText: { type: String, default: '' },
+    disabled: { type: Boolean, default: false },
+    disabledLabel: { type: String, default: '' },
+    accent: { type: String, default: 'cyan' }
 })
 
 // Split text into segments: [{ text, match }]
@@ -32,6 +34,18 @@ const highlightSegments = (text, query) => {
 const nameSegments = computed(() => highlightSegments(props.fitting.name, props.searchText))
 
 // When the match is in effect_text but NOT in the name, show a snippet
+const costDisplay = computed(() => {
+    if (props.fitting.cost_multiplier !== undefined)
+        return Math.round(props.fitting.cost_multiplier * 100) + '%'
+    return '$' + (props.fitting.cost || 0).toLocaleString('en-US')
+})
+
+const fullCostDisplay = computed(() => {
+    if (props.fitting.cost_multiplier !== undefined)
+        return '$' + (props.fitting.cost_multiplier * props.drone.cost).toLocaleString('en-US')
+    return '$' + (props.fitting.cost || 0).toLocaleString('en-US')
+})
+
 const descriptionSnippet = computed(() => {
     if (!props.searchText || props.searchText.length < 2 || !props.compact) return null
     // If name already matches, no need for a snippet
@@ -56,19 +70,22 @@ const descriptionSnippet = computed(() => {
     <!-- Compact mode: single-line row for dialog list -->
     <div v-if="compact"
         class="mod-compact"
-        :class="{
+        :class="[{
             'mod-selected': selected,
             'mod-equipped': equipped && !stackable,
+            'mod-disabled': disabled,
             'type-fitting': fitting.type === 'fitting',
             'type-mod': fitting.type === 'mod'
-        }"
+        }, 'accent-' + accent]"
     >
         <div class="compact-info">
             <div class="compact-left">
                 <span class="compact-name"><template v-for="(seg, i) in nameSegments" :key="i"><strong v-if="seg.match" class="highlight">{{ seg.text }}</strong><template v-else>{{ seg.text }}</template></template></span>
                 <span v-if="stackable && equipCount > 0" class="equip-count">x{{ equipCount }}</span>
-                <span class="compact-cost">{{ Math.round(fitting.cost_multiplier * 100) }}%</span>
-                <Badge :value="fitting.type" :severity="fitting.type === 'fitting' ? 'info' : 'warn'" />
+                <span v-if="fitting.power !== undefined" class="compact-resource">{{ fitting.power }}P/{{ fitting.mass }}M</span>
+                <span class="compact-cost">{{ costDisplay }}</span>
+                <span v-if="disabled && disabledLabel" class="size-badge">{{ disabledLabel }}</span>
+                <span class="mod-type-tag" :class="fitting.type">{{ fitting.type }}</span>
             </div>
             <div v-if="descriptionSnippet" class="compact-snippet">
                 <template v-for="(seg, i) in descriptionSnippet" :key="i"><strong v-if="seg.match" class="highlight">{{ seg.text }}</strong><template v-else>{{ seg.text }}</template></template>
@@ -86,7 +103,7 @@ const descriptionSnippet = computed(() => {
             <div class="mod-title-row">
                 <h4>{{ fitting.name }}</h4>
                 <span class="mod-type-tag" :class="fitting.type">{{ fitting.type }}</span>
-                <span class="mod-cost">${{ fitting.cost_multiplier * drone.cost }}</span>
+                <span class="mod-cost">{{ fullCostDisplay }}</span>
             </div>
             <a v-if="removable" class="mod-remove clickable" @click="$emit('removeMod', { index: index, type: fitting.type })" title="Remove">&times;</a>
         </div>
@@ -205,14 +222,28 @@ const descriptionSnippet = computed(() => {
     background: var(--cwn-bg-soft);
 }
 
-.mod-compact.mod-selected {
+.mod-compact.mod-selected.accent-cyan {
     background: var(--cwn-bg-mute);
     border-left: 2px solid var(--cwn-cyan);
+}
+
+.mod-compact.mod-selected.accent-yellow {
+    background: var(--cwn-bg-mute);
+    border-left: 2px solid var(--cwn-yellow);
 }
 
 .mod-compact.mod-equipped {
     opacity: 0.45;
     cursor: default;
+}
+
+.mod-compact.mod-disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+.mod-compact.mod-disabled:hover {
+    background: transparent;
 }
 
 .compact-info {
@@ -244,6 +275,23 @@ const descriptionSnippet = computed(() => {
     white-space: nowrap;
 }
 
+.compact-resource {
+    color: var(--cwn-text-muted);
+    font-size: 0.75em;
+    white-space: nowrap;
+}
+
+.size-badge {
+    font-size: 0.65em;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--cwn-magenta-dim);
+    border: 1px solid var(--cwn-magenta-dim);
+    border-radius: 2px;
+    padding: 0 4px;
+    white-space: nowrap;
+}
+
 .compact-right {
     display: flex;
     align-items: center;
@@ -251,12 +299,21 @@ const descriptionSnippet = computed(() => {
     flex-shrink: 0;
 }
 
-.equip-count {
+.accent-cyan .equip-count {
     color: var(--cwn-cyan-dim);
     font-size: 0.75em;
     font-weight: bold;
     padding: 1px 5px;
     border: 1px solid var(--cwn-cyan-dim);
+    border-radius: 2px;
+}
+
+.accent-yellow .equip-count {
+    color: var(--cwn-yellow-dim);
+    font-size: 0.75em;
+    font-weight: bold;
+    padding: 1px 5px;
+    border: 1px solid var(--cwn-yellow-dim);
     border-radius: 2px;
 }
 
@@ -273,18 +330,32 @@ const descriptionSnippet = computed(() => {
     text-overflow: ellipsis;
 }
 
-.highlight {
+.accent-cyan .highlight {
     color: var(--cwn-cyan);
     font-weight: bold;
 }
 
-/* Flash animation applied by parent */
-.mod-compact.mod-just-added {
-    animation: mod-added-flash 0.6s ease-out;
+.accent-yellow .highlight {
+    color: var(--cwn-yellow);
+    font-weight: bold;
 }
 
-@keyframes mod-added-flash {
+/* Flash animation applied by parent */
+.mod-compact.accent-cyan.mod-just-added {
+    animation: mod-added-flash-cyan 0.6s ease-out;
+}
+
+.mod-compact.accent-yellow.mod-just-added {
+    animation: mod-added-flash-yellow 0.6s ease-out;
+}
+
+@keyframes mod-added-flash-cyan {
     0% { background: rgba(0, 240, 255, 0.3); }
+    100% { background: transparent; }
+}
+
+@keyframes mod-added-flash-yellow {
+    0% { background: rgba(240, 224, 0, 0.3); }
     100% { background: transparent; }
 }
 </style>

@@ -3,6 +3,7 @@ import { defineAsyncComponent, shallowRef } from 'vue'
 
 const tools = [
   { id: 'drones', label: 'Drones', component: defineAsyncComponent(() => import('./components/Drones.vue')) },
+  { id: 'vehicles', label: 'Vehicles', component: defineAsyncComponent(() => import('./components/Vehicles.vue')) },
 ]
 
 const activeTool = shallowRef(tools[0])
@@ -15,7 +16,7 @@ const activeTool = shallowRef(tools[0])
       <li
         v-for="tool in tools"
         :key="tool.id"
-        :class="{ active: activeTool.id === tool.id }"
+        :class="[{ active: activeTool.id === tool.id }, 'tool-' + tool.id]"
         @click="activeTool = tool"
       >
         {{ tool.label }}
@@ -82,14 +83,28 @@ const activeTool = shallowRef(tools[0])
 .sidebar-nav li:hover {
   color: var(--cwn-text-bright);
   background: var(--cwn-bg-mute);
+}
+
+.sidebar-nav li.tool-drones:hover {
   border-left-color: var(--cwn-cyan-dim);
 }
 
-.sidebar-nav li.active {
+.sidebar-nav li.tool-drones.active {
   color: var(--cwn-cyan);
   background: var(--cwn-bg-mute);
   border-left-color: var(--cwn-cyan);
   text-shadow: var(--cwn-glow-cyan);
+}
+
+.sidebar-nav li.tool-vehicles:hover {
+  border-left-color: var(--cwn-yellow-dim);
+}
+
+.sidebar-nav li.tool-vehicles.active {
+  color: var(--cwn-yellow);
+  background: var(--cwn-bg-mute);
+  border-left-color: var(--cwn-yellow);
+  text-shadow: var(--cwn-glow-yellow);
 }
 
 .sidebar-footer {

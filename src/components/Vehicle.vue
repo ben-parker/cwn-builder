@@ -3,13 +3,13 @@ import { ref, computed } from 'vue'
 import ModBlock from '@/components/ModBlock.vue'
 import WeaponBlock from '@/components/WeaponBlock.vue'
 import ItemPickerDialog from '@/components/ItemPickerDialog.vue'
-import { useDroneStore } from '@/stores/drones'
+import { useVehicleStore } from '@/stores/vehicles'
 import { useWeaponStore } from '@/stores/weapons'
-import { addModEffect, removeModEffect } from '@/services/fitting_effects'
+import { addModEffect, removeModEffect } from '@/services/vehicle_fitting_effects'
 
-const store = useDroneStore()
+const store = useVehicleStore()
 const weaponStore = useWeaponStore()
-const props = defineProps(['index', 'drone'])
+const props = defineProps(['index', 'vehicle'])
 const emit = defineEmits(['updated'])
 
 const searchText = ref('')
@@ -18,11 +18,42 @@ const mods = ref([])
 const previewedMod = ref(null)
 const addedThisSession = ref([])
 
-const STACKABLE_NAMES = new Set([
-    'Ammo Supply', 'Manipulator Tendrils', 'Memory Banks', 'Ammo Caddy'
-])
+const SIZE_ORDER = { S: 0, M: 1, L: 2 }
 
-const isStackable = (name) => STACKABLE_NAMES.has(name)
+// Stackable limits: Infinity = unlimited stacking, object = per-size max
+const STACKABLE_LIMITS = {
+    'Cargo Space': Infinity,
+    'Armor Plating': { S: 1, M: 2, L: 3 },
+    'Extra Passengers': Infinity,
+    "Smuggler's Hold": Infinity,
+    'Drone Hub': { S: 1, M: 1, L: 2 },
+}
+
+const isStackable = (name) => name in STACKABLE_LIMITS
+
+const maxStackCount = (name) => {
+    const limit = STACKABLE_LIMITS[name]
+    if (limit === undefined) return 1
+    if (typeof limit === 'number') return limit
+    return limit[props.vehicle.size] ?? 1
+}
+
+const canFitSize = (fitting) => {
+    if (fitting.min_size && SIZE_ORDER[props.vehicle.size] < SIZE_ORDER[fitting.min_size])
+        return false
+    if (fitting.max_size && SIZE_ORDER[props.vehicle.size] > SIZE_ORDER[fitting.max_size])
+        return false
+    return true
+}
+
+const sizeDisabledLabel = (fitting) => {
+    if (canFitSize(fitting)) return ''
+    if (fitting.min_size && SIZE_ORDER[props.vehicle.size] < SIZE_ORDER[fitting.min_size])
+        return fitting.min_size === 'M' ? 'Req. M+' : fitting.min_size === 'L' ? 'Req. L' : `Req. ${fitting.min_size}`
+    if (fitting.max_size && SIZE_ORDER[props.vehicle.size] > SIZE_ORDER[fitting.max_size])
+        return `Max ${fitting.max_size}`
+    return ''
+}
 
 // Equipped tracking
 const equippedNames = computed(() => new Set(mods.value.map(m => m.name)))
@@ -33,17 +64,16 @@ const equipCounts = computed(() => {
 })
 
 const removeMod = function(data) {
-    removeModEffect(mods.value[data.index], props.drone);
+    removeModEffect(mods.value[data.index], props.vehicle);
     mods.value.splice(data.index, 1);
     emit('updated', { index: props.index, cost: totalCost.value });
 };
 
 const select = function(fitting) {
     if (!canAddItem(fitting)) return
-    addModEffect(fitting, props.drone);
+    addModEffect(fitting, props.vehicle);
     mods.value.push(fitting);
     emit('updated', { index: props.index, cost: totalCost.value });
-    // Flash feedback
     addedThisSession.value.push(fitting.name)
     setTimeout(() => {
         const idx = addedThisSession.value.indexOf(fitting.name)
@@ -63,42 +93,31 @@ const openDialog = function() {
 }
 
 const money = (cost) => cost < 0 ? "-$" + Math.abs(cost).toLocaleString("en-US") : "$" + cost.toLocaleString("en-US");
-const modifiedMove = (move, modifier) => {
-    const re = /^(\d+)(m \w+)$/;
-    const matches = re.exec(move);
-
-    if (matches === null || matches.length !== 3) {
-        return move;
-    }
-
-    const moveValue = parseInt(matches[1]);
-    if (!moveValue) return move;
-
-    return ((moveValue + modifier) + matches[2]);
-};
 
 // Computed
 const addedMods = computed(() => mods.value.filter(m => m.type === 'mod'));
 const addedFittings = computed(() => mods.value.filter(m => m.type === 'fitting'));
-const tooManyFittings = computed(() =>
-    (addedFittings.value.length + (props.drone.extraFittings ?? 0))
-    > (props.drone.fittings + (props.drone.extraMaxFittings ?? 0)));
 
-const fittingsAtCapacity = computed(() =>
-    (addedFittings.value.length + (props.drone.extraFittings ?? 0))
-    >= (props.drone.fittings + (props.drone.extraMaxFittings ?? 0)));
+// Power & Mass tracking
+const usedPower = computed(() =>
+    addedFittings.value.reduce((sum, f) => sum + (f.power || 0), 0))
+const totalPower = computed(() =>
+    props.vehicle.power + (props.vehicle.extraMaxPower ?? 0))
+const overPower = computed(() => usedPower.value > totalPower.value)
+const powerDisplay = computed(() => `${usedPower.value}/${totalPower.value}`)
 
-const fittingSlotDisplay = computed(() => {
-    const used = addedFittings.value.length + (props.drone.extraFittings ?? 0)
-    const max = props.drone.fittings + (props.drone.extraMaxFittings ?? 0)
-    return `${used}/${max}`
-})
+const usedMass = computed(() =>
+    addedFittings.value.reduce((sum, f) => sum + (f.mass || 0), 0))
+const totalMass = computed(() =>
+    props.vehicle.mass + (props.vehicle.extraMaxMass ?? 0))
+const overMass = computed(() => usedMass.value > totalMass.value)
+const massDisplay = computed(() => `${usedMass.value}/${totalMass.value}`)
 
-const totalHardpoints = computed(() => props.drone.hardpoints + (props.drone.extraHardpoints ?? 0))
+const totalHardpoints = computed(() => props.vehicle.hardpoints + (props.vehicle.extraHardpoints ?? 0))
 const hasHardpoints = computed(() => totalHardpoints.value > 0)
 
 const filteredFittings = computed(() => {
-    const items = store.droneMods.filter(m => m.type === 'fitting')
+    const items = store.vehicleMods.filter(m => m.type === 'fitting')
     if (searchText.value.length < 2) return items
     const q = searchText.value.toLowerCase()
     return items.filter(m =>
@@ -106,7 +125,7 @@ const filteredFittings = computed(() => {
 })
 
 const filteredMods = computed(() => {
-    const items = store.droneMods.filter(m => m.type === 'mod')
+    const items = store.vehicleMods.filter(m => m.type === 'mod')
     if (searchText.value.length < 2) return items
     const q = searchText.value.toLowerCase()
     return items.filter(m =>
@@ -114,11 +133,14 @@ const filteredMods = computed(() => {
 })
 
 const totalCost = computed(() => {
-    let cost = props.drone.cost;
+    let cost = props.vehicle.cost;
 
     if (mods.value.length > 0) {
-        cost += mods.value.reduce((prev, cur) =>
-            prev + (props.drone.cost * cur.cost_multiplier), 0);
+        cost += mods.value.reduce((prev, cur) => {
+            if (cur.cost_multiplier !== undefined)
+                return prev + (props.vehicle.cost * cur.cost_multiplier);
+            return prev + (cur.cost || 0);
+        }, 0);
     }
 
     if (weapons.value.length > 0) {
@@ -129,10 +151,21 @@ const totalCost = computed(() => {
 })
 
 const canAddItem = (fitting) => {
-    const equipped = equippedNames.value.has(fitting.name)
-    if (!equipped) return true
-    return isStackable(fitting.name)
+    if (!canFitSize(fitting)) return false
+    const count = equipCounts.value[fitting.name] || 0
+    if (count === 0) return true
+    if (!isStackable(fitting.name)) return false
+    return count < maxStackCount(fitting.name)
 }
+
+// Armor display helper
+const armorDisplay = computed(() => {
+    const base = props.vehicle.armor
+    const extra = props.vehicle.extraArmor ?? 0
+    if (typeof base === 'string') return base // *, ** special values
+    const total = Math.max(0, base + extra)
+    return extra !== 0 ? `${base} (${total})` : `${base}`
+})
 
 // ===== Weapon state =====
 const weapons = ref([])
@@ -148,19 +181,9 @@ const hardpointsAtCapacity = computed(() => usedHardpoints.value >= totalHardpoi
 const tooManyHardpoints = computed(() => usedHardpoints.value > totalHardpoints.value)
 const hardpointSlotDisplay = computed(() => `${usedHardpoints.value}/${totalHardpoints.value}`)
 
-// Weapon size filtering - uses BASE encumbrance, not modified
-const allowedWeaponCategories = computed(() => {
-    const enc = props.drone.encumbrance
-    if (enc === '-') return new Set(['pistol', 'rifle', 'heavy'])
-    const n = parseInt(enc)
-    if (n > 3) return new Set(['pistol', 'rifle'])
-    return new Set(['pistol'])
-})
-
+// Vehicle weapons: filter by platform
 const availableWeapons = computed(() =>
-    weaponStore.weapons.filter(w =>
-        allowedWeaponCategories.value.has(w.category) &&
-        (!w.platform || w.platform.includes('drone')))
+    weaponStore.weapons.filter(w => w.platform?.includes('vehicle'))
 )
 
 const filteredWeaponsByCategory = computed(() => {
@@ -210,70 +233,97 @@ const openWeaponDialog = function() {
     weaponAddedThisSession.value = []
     weaponDialogVisible.value = true
 }
+
+// Detail panel cost display for previewed mod
+const previewCostDisplay = computed(() => {
+    if (!previewedMod.value) return ''
+    if (previewedMod.value.cost_multiplier !== undefined)
+        return money(previewedMod.value.cost_multiplier * props.vehicle.cost)
+    return money(previewedMod.value.cost || 0)
+})
+
+const previewCostLabel = computed(() => {
+    if (!previewedMod.value) return ''
+    if (previewedMod.value.cost_multiplier !== undefined)
+        return Math.round(previewedMod.value.cost_multiplier * 100) + '% base'
+    return '$' + (previewedMod.value.cost || 0).toLocaleString('en-US')
+})
 </script>
 
 <template>
-    <div class="drone-card">
-        <div class="drone-heading">
-            <div class="drone-heading-rows">
-                <div class="drone-title">
-                    <h3>{{ drone.name }}</h3>
-                    <span class="drone-cost">{{ money(totalCost) }}</span>
+    <div class="vehicle-card">
+        <div class="vehicle-heading">
+            <div class="vehicle-heading-rows">
+                <div class="vehicle-title">
+                    <h3>{{ vehicle.name }}</h3>
+                    <span class="vehicle-cost">{{ money(totalCost) }}</span>
                 </div>
                 <div class="heading-actions">
                     <a class="heading-action-btn clickable" @click="openDialog" title="Add Mod/Fitting">+ Mod/Fitting</a>
                     <a class="heading-action-btn" :class="{ clickable: hasHardpoints, disabled: !hasHardpoints }" @click="hasHardpoints && openWeaponDialog()" title="Add Weapon">+ Weapon</a>
                 </div>
             </div>
-            <a class="remove-btn clickable" @click="$emit('removeDrone', index)" title="Remove">&times;</a>
+            <a class="remove-btn clickable" @click="$emit('removeVehicle', index)" title="Remove">&times;</a>
         </div>
-        <div class="drone-stats">
+        <div class="vehicle-stats">
             <div class="stat">
                 <span class="stat-label">AC</span>
-                <span class="stat-value">{{ drone.ac }}<span v-if="(drone.extraAc ?? 0) > 0" class="stat-mod">({{ drone.ac + drone.extraAc }})</span></span>
+                <span class="stat-value">{{ vehicle.ac }}<span v-if="(vehicle.extraAc ?? 0) !== 0" class="stat-mod">({{ vehicle.ac + vehicle.extraAc }})</span></span>
             </div>
             <div class="stat">
                 <span class="stat-label">TT</span>
-                <span class="stat-value">{{ drone.tt }}</span>
+                <span class="stat-value">{{ vehicle.tt }}</span>
             </div>
             <div class="stat">
                 <span class="stat-label">HP</span>
-                <span class="stat-value">{{ drone.hp }}<span v-if="(drone.extraHp ?? 0) > 0" class="stat-mod">({{ drone.hp + drone.extraHp }})</span></span>
-            </div>
-            <div class="stat" :class="{error: tooManyFittings}">
-                <span class="stat-label">Fit.</span>
-                <span class="stat-value">{{ addedFittings.length + (drone.extraFittings ?? 0) }}/{{ drone.fittings + (drone.extraMaxFittings ?? 0)}}</span>
+                <span class="stat-value">{{ vehicle.hp }}<span v-if="(vehicle.extraHp ?? 0) !== 0" class="stat-mod">({{ vehicle.hp + vehicle.extraHp }})</span></span>
             </div>
             <div class="stat">
-                <span class="stat-label">Move</span>
-                <span class="stat-value">{{ modifiedMove(drone.move, drone.extraMove ?? 0) }}</span>
+                <span class="stat-label">Armor</span>
+                <span class="stat-value" :title="vehicle.armor_note || ''">{{ armorDisplay }}</span>
+            </div>
+            <div class="stat">
+                <span class="stat-label">Spd</span>
+                <span class="stat-value">{{ vehicle.speed }}<span v-if="(vehicle.extraSpeed ?? 0) !== 0" class="stat-mod">({{ vehicle.speed + vehicle.extraSpeed }})</span></span>
+            </div>
+            <div class="stat">
+                <span class="stat-label">Crew</span>
+                <span class="stat-value">{{ vehicle.crew }}<span v-if="(vehicle.extraCrew ?? 0) !== 0" class="stat-mod">({{ vehicle.crew + vehicle.extraCrew }})</span></span>
+            </div>
+            <div class="stat" :class="{error: overPower}">
+                <span class="stat-label">Pow.</span>
+                <span class="stat-value">{{ powerDisplay }}</span>
+            </div>
+            <div class="stat" :class="{error: overMass}">
+                <span class="stat-label">Mass</span>
+                <span class="stat-value">{{ massDisplay }}</span>
             </div>
             <div class="stat" :class="{error: tooManyHardpoints}">
                 <span class="stat-label">Hrd.</span>
                 <span class="stat-value">{{ usedHardpoints }}/{{ totalHardpoints }}</span>
             </div>
-            <div v-if="parseInt(drone.encumbrance)" class="stat">
-                <span class="stat-label">Enc.</span>
-                <span class="stat-value">{{ drone.encumbrance }}<span v-if="(drone.extraEncumbrance ?? 0) !== 0" class="stat-mod">({{ drone.encumbrance + drone.extraEncumbrance }})</span></span>
-            </div>
-            <div v-else class="stat">
-                <span class="stat-label">Enc.</span>
-                <span class="stat-value">{{ drone.encumbrance }}</span>
+            <div class="stat">
+                <span class="stat-label">Size</span>
+                <span class="stat-value">{{ vehicle.size }}</span>
             </div>
         </div>
-        <div v-if="mods.length" class="drone-mods">
-            <ModBlock class="mod-block" v-for="(mod, index) in mods" @remove-mod="removeMod" :fitting="mod" :drone="drone" removable="true" :index="index" />
+        <div v-if="mods.length" class="vehicle-mods">
+            <ModBlock class="mod-block" v-for="(mod, index) in mods" @remove-mod="removeMod" :fitting="mod" :drone="vehicle" removable="true" :index="index" accent="yellow" />
         </div>
-        <div v-if="weapons.length" class="drone-weapons">
-            <WeaponBlock class="weapon-block" v-for="(weapon, index) in weapons" @remove-weapon="removeWeapon" :weapon="weapon" :drone="drone" removable :index="index" />
+        <div v-if="weapons.length" class="vehicle-weapons">
+            <WeaponBlock class="weapon-block" v-for="(weapon, index) in weapons" @remove-weapon="removeWeapon" :weapon="weapon" :drone="vehicle" removable :index="index" />
         </div>
 
         <!-- Mod/Fitting Dialog -->
-        <ItemPickerDialog v-model:visible="visible" v-model:searchText="searchText" title="Modify Drone">
+        <ItemPickerDialog v-model:visible="visible" v-model:searchText="searchText" title="Modify Vehicle">
             <template #toolbar-pills>
-                <span class="slot-pill" :class="{ 'over-limit': tooManyFittings }">
-                    <span class="slot-label">Fit</span>
-                    <span class="slot-value">{{ addedFittings.length + (drone.extraFittings ?? 0) }}/{{ drone.fittings + (drone.extraMaxFittings ?? 0) }}</span>
+                <span class="slot-pill" :class="{ 'over-limit': overPower }">
+                    <span class="slot-label">Pow</span>
+                    <span class="slot-value">{{ powerDisplay }}</span>
+                </span>
+                <span class="slot-pill" :class="{ 'over-limit': overMass }">
+                    <span class="slot-label">Mass</span>
+                    <span class="slot-value">{{ massDisplay }}</span>
                 </span>
                 <span class="slot-pill">
                     <span class="slot-label">Mods</span>
@@ -283,15 +333,36 @@ const openWeaponDialog = function() {
 
             <template #item-list>
                 <div class="section-header">Fittings</div>
-                <div v-if="fittingsAtCapacity" class="capacity-warning">
-                    Fitting slots full &mdash; {{ fittingSlotDisplay }}
-                </div>
                 <ModBlock
                     v-for="fitting in filteredFittings"
                     :key="'f-' + fitting.name"
                     compact
+                    accent="yellow"
                     :fitting="fitting"
-                    :drone="drone"
+                    :drone="vehicle"
+                    :searchText="searchText"
+                    :selected="previewedMod?.name === fitting.name"
+                    :equipped="equippedNames.has(fitting.name)"
+                    :equipCount="equipCounts[fitting.name] || 0"
+                    :stackable="isStackable(fitting.name)"
+                    :disabled="!canFitSize(fitting)"
+                    :disabledLabel="sizeDisabledLabel(fitting)"
+                    :class="{ 'mod-just-added': addedThisSession.includes(fitting.name) }"
+                    @click="preview(fitting)"
+                >
+                    <template #add-button>
+                        <button v-if="canFitSize(fitting)" class="circle-add-btn cab-yellow" @click.stop="select(fitting)" title="Add">+</button>
+                    </template>
+                </ModBlock>
+
+                <div class="section-header">Mods</div>
+                <ModBlock
+                    v-for="fitting in filteredMods"
+                    :key="'m-' + fitting.name"
+                    compact
+                    accent="yellow"
+                    :fitting="fitting"
+                    :drone="vehicle"
                     :searchText="searchText"
                     :selected="previewedMod?.name === fitting.name"
                     :equipped="equippedNames.has(fitting.name)"
@@ -301,27 +372,7 @@ const openWeaponDialog = function() {
                     @click="preview(fitting)"
                 >
                     <template #add-button>
-                        <button class="circle-add-btn" @click.stop="select(fitting)" title="Add">+</button>
-                    </template>
-                </ModBlock>
-
-                <div class="section-header">Mods</div>
-                <ModBlock
-                    v-for="fitting in filteredMods"
-                    :key="'m-' + fitting.name"
-                    compact
-                    :fitting="fitting"
-                    :drone="drone"
-                    :searchText="searchText"
-                    :selected="previewedMod?.name === fitting.name"
-                    :equipped="equippedNames.has(fitting.name)"
-                    :equipCount="equipCounts[fitting.name] || 0"
-                    :stackable="false"
-                    :class="{ 'mod-just-added': addedThisSession.includes(fitting.name) }"
-                    @click="preview(fitting)"
-                >
-                    <template #add-button>
-                        <button class="circle-add-btn" @click.stop="select(fitting)" title="Add">+</button>
+                        <button class="circle-add-btn cab-yellow" @click.stop="select(fitting)" title="Add">+</button>
                     </template>
                 </ModBlock>
 
@@ -337,7 +388,7 @@ const openWeaponDialog = function() {
                 <div v-else class="detail-panel">
                     <h3 class="detail-panel-name">
                         {{ previewedMod.name }}
-                        <span class="detail-panel-cost">{{ money(previewedMod.cost_multiplier * drone.cost) }}</span>
+                        <span class="detail-panel-cost">{{ previewCostDisplay }}</span>
                     </h3>
                     <div class="detail-meta">
                         <div class="meta-item">
@@ -346,8 +397,24 @@ const openWeaponDialog = function() {
                         </div>
                         <div class="meta-item">
                             <span class="meta-label">Cost</span>
-                            <span class="meta-value">{{ Math.round(previewedMod.cost_multiplier * 100) }}% base</span>
+                            <span class="meta-value">{{ previewCostLabel }}</span>
                         </div>
+                        <template v-if="previewedMod.power !== undefined">
+                            <div class="meta-item">
+                                <span class="meta-label">Power</span>
+                                <span class="meta-value">{{ previewedMod.power }}</span>
+                            </div>
+                            <div class="meta-item">
+                                <span class="meta-label">Mass</span>
+                                <span class="meta-value">{{ previewedMod.mass }}</span>
+                            </div>
+                        </template>
+                        <template v-if="previewedMod.min_size">
+                            <div class="meta-item">
+                                <span class="meta-label">Min. Size</span>
+                                <span class="meta-value">{{ previewedMod.min_size }}</span>
+                            </div>
+                        </template>
                         <template v-if="previewedMod.type === 'mod'">
                             <div class="meta-item">
                                 <span class="meta-label">Fix</span>
@@ -357,15 +424,20 @@ const openWeaponDialog = function() {
                                 <span class="meta-label">Drive</span>
                                 <span class="meta-value">{{ previewedMod.drive }}</span>
                             </div>
+                            <div v-if="previewedMod.special_components > 0" class="meta-item">
+                                <span class="meta-label">Components</span>
+                                <span class="meta-value">{{ previewedMod.special_components }}</span>
+                            </div>
                         </template>
                     </div>
                     <p class="detail-effect">{{ previewedMod.effect_text }}</p>
+                    <div v-if="!canFitSize(previewedMod)" class="detail-unavailable-msg">Vehicle too small</div>
                     <button
-                        v-if="canAddItem(previewedMod)"
+                        v-else-if="canAddItem(previewedMod)"
                         class="detail-action-btn"
                         @click="select(previewedMod)"
                     >
-                        Add to Drone
+                        Add to Vehicle
                     </button>
                     <div v-else class="detail-unavailable-msg">Already equipped</div>
                 </div>
@@ -393,7 +465,7 @@ const openWeaponDialog = function() {
                             :key="weapon.name"
                             compact
                             :weapon="weapon"
-                            :drone="drone"
+                            :drone="vehicle"
                             :searchText="weaponSearchText"
                             :selected="previewedWeapon?.name === weapon.name"
                             :equipped="equippedWeaponNames.has(weapon.name)"
@@ -401,7 +473,7 @@ const openWeaponDialog = function() {
                             @click="previewWeapon(weapon)"
                         >
                             <template #add-button>
-                                <button class="circle-add-btn" @click.stop="selectWeapon(weapon)" title="Mount">+</button>
+                                <button class="circle-add-btn cab-yellow" @click.stop="selectWeapon(weapon)" title="Mount">+</button>
                             </template>
                         </WeaponBlock>
                     </template>
@@ -467,26 +539,26 @@ const openWeaponDialog = function() {
 </template>
 
 <style scoped>
-.drone-card {
+.vehicle-card {
     background: var(--cwn-bg-soft);
     border: 1px solid var(--cwn-border);
     border-radius: 4px;
-    width: 380px;
-    min-width: 320px;
+    width: 420px;
+    min-width: 340px;
     font-size: 0.85em;
 }
 
-.drone-heading {
+.vehicle-heading {
     background: var(--cwn-bg-mute);
-    color: var(--cwn-cyan);
-    border-left: 3px solid var(--cwn-cyan);
+    color: var(--cwn-yellow);
+    border-left: 3px solid var(--cwn-yellow);
     display: flex;
     align-items: center;
     padding: 2px 12px;
     border-radius: 4px 4px 0 0;
 }
 
-.drone-heading-rows {
+.vehicle-heading-rows {
     display: flex;
     flex-direction: column;
     flex: 1;
@@ -494,19 +566,19 @@ const openWeaponDialog = function() {
     gap: 4px;
 }
 
-.drone-title {
+.vehicle-title {
     display: flex;
     align-items: baseline;
     gap: 8px;
 }
 
-.drone-title h3 {
+.vehicle-title h3 {
     display: inline;
     font-size: 1em;
     font-weight: bold;
 }
 
-.drone-cost {
+.vehicle-cost {
     color: var(--cwn-text-muted);
     font-size: 0.9em;
 }
@@ -520,7 +592,7 @@ const openWeaponDialog = function() {
     transition: opacity 0.2s, color 0.2s;
 }
 
-.drone-heading:hover .remove-btn {
+.vehicle-heading:hover .remove-btn {
     opacity: 0.7;
 }
 
@@ -530,7 +602,7 @@ const openWeaponDialog = function() {
 }
 
 /* Stat row */
-.drone-stats {
+.vehicle-stats {
     display: flex;
     gap: 0;
     padding: 8px 12px;
@@ -541,8 +613,8 @@ const openWeaponDialog = function() {
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 2px 8px;
-    min-width: 44px;
+    padding: 2px 6px;
+    min-width: 40px;
 }
 
 .stat-label {
@@ -558,7 +630,7 @@ const openWeaponDialog = function() {
 }
 
 .stat-mod {
-    color: var(--cwn-cyan-dim);
+    color: var(--cwn-yellow-dim);
     margin-left: 2px;
 }
 
@@ -567,7 +639,7 @@ const openWeaponDialog = function() {
 }
 
 /* Mods section */
-.drone-mods {
+.vehicle-mods {
     padding: 6px 4px 8px;
 }
 
@@ -587,17 +659,17 @@ const openWeaponDialog = function() {
     font-size: 0.7em;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    color: var(--cwn-cyan-dim);
+    color: var(--cwn-yellow-dim);
     padding: 2px 6px;
-    border: 1px solid rgba(0, 240, 255, 0.15);
+    border: 1px solid rgba(240, 224, 0, 0.15);
     border-radius: 2px;
     transition: background 0.15s, color 0.15s, border-color 0.15s;
 }
 
 .heading-action-btn:not(.disabled):hover {
-    background: rgba(0, 240, 255, 0.1);
-    color: var(--cwn-cyan);
-    border-color: var(--cwn-cyan-dim);
+    background: rgba(240, 224, 0, 0.1);
+    color: var(--cwn-yellow);
+    border-color: var(--cwn-yellow-dim);
 }
 
 .heading-action-btn.disabled {
@@ -608,7 +680,7 @@ const openWeaponDialog = function() {
 }
 
 /* Weapons section */
-.drone-weapons {
+.vehicle-weapons {
     padding: 6px 4px 8px;
 }
 

@@ -13,6 +13,7 @@
   --cwn-magenta:      #ff00aa;
   --cwn-magenta-dim:  #aa0077;
   --cwn-yellow:       #f0e000;
+  --cwn-yellow-dim:   #a09800;
 
   /* Text */
   --cwn-text:         #c8c8d4;
@@ -26,6 +27,7 @@
   /* Glow effects */
   --cwn-glow-cyan:    0 0 8px rgba(0, 240, 255, 0.4);
   --cwn-glow-magenta: 0 0 8px rgba(255, 0, 170, 0.4);
+  --cwn-glow-yellow:  0 0 8px rgba(240, 224, 0, 0.4);
 
   /* Semantic mappings */
   --color-background:      var(--cwn-bg);
@@ -68,4 +70,34 @@ body {
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Shared circular add button */
+.circle-add-btn {
+  width: 24px;
+  height: 24px;
+  border: 1px solid var(--_cab-color, var(--cwn-cyan-dim));
+  border-radius: 50%;
+  background: transparent;
+  color: var(--_cab-color-bright, var(--cwn-cyan));
+  font-size: 0.9em;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0 1px 0;
+  transition: all 0.2s;
+  line-height: 1;
+}
+
+.circle-add-btn:hover {
+  background: color-mix(in srgb, var(--_cab-color-bright, var(--cwn-cyan)) 15%, transparent);
+  border-color: var(--_cab-color-bright, var(--cwn-cyan));
+  box-shadow: var(--_cab-glow, var(--cwn-glow-cyan));
+}
+
+.circle-add-btn.cab-yellow {
+  --_cab-color: var(--cwn-yellow-dim);
+  --_cab-color-bright: var(--cwn-yellow);
+  --_cab-glow: var(--cwn-glow-yellow);
 }
