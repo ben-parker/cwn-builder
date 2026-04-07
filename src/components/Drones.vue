@@ -1,10 +1,12 @@
 <script setup>
-import { ref, computed, nextTick, watch, onMounted, onUnmounted } from 'vue'
+import { ref, computed, nextTick, watch, onMounted, onUnmounted, toRaw } from 'vue'
 import { useDroneStore } from '@/stores/drones'
+import { useWeaponStore } from '@/stores/weapons'
 import Drone from '@/components/Drone.vue'
 
 const store = useDroneStore()
-await store.loadDroneData()
+const weaponStore = useWeaponStore()
+await Promise.all([store.loadDroneData(), weaponStore.loadWeaponData()])
 
 const droneList = ref([])
 const costs = ref([])
@@ -28,7 +30,7 @@ watch(selectedIndex, () => {
 });
 
 const newDrone = (idx) => {
-    droneList.value.push({ ...structuredClone(store.drones[idx]), _uid: nextDroneId++ });
+    droneList.value.push({ ...structuredClone(toRaw(store.drones[idx])), _uid: nextDroneId++ });
     costs.value.push(store.drones[idx].cost);
 };
 
@@ -109,7 +111,7 @@ const moveType = (drone) => {
                 </div>
                 <div class="budget-item">
                     <span class="budget-label">Remaining</span>
-                    <span class="budget-value" :class="{ 'over-budget': budgetRemaining < 0 }">{{ money(budgetRemaining) }}</span>
+                    <span class="budget-value" :class="{ 'zero-budget': budgetRemaining <= 0 }">{{ money(Math.max(0, budgetRemaining)) }}</span>
                 </div>
                 <div v-if="outOfPocket > 0" class="budget-item">
                     <span class="budget-label">Out of Pocket</span>
@@ -306,8 +308,8 @@ const moveType = (drone) => {
     font-weight: bold;
 }
 
-.budget-value.over-budget {
-    color: var(--cwn-magenta);
+.budget-value.zero-budget {
+    color: var(--cwn-text-muted);
 }
 
 .budget-value.out-of-pocket {

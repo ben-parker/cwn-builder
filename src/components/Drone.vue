@@ -1,12 +1,14 @@
 <script setup>
 import { ref, computed } from 'vue'
-import Dialog from 'primevue/dialog'
-import InputText from 'primevue/inputtext'
 import ModBlock from '@/components/ModBlock.vue'
+import WeaponBlock from '@/components/WeaponBlock.vue'
+import ItemPickerDialog from '@/components/ItemPickerDialog.vue'
 import { useDroneStore } from '@/stores/drones'
+import { useWeaponStore } from '@/stores/weapons'
 import { addModEffect, removeModEffect } from '@/services/fitting_effects'
 
 const store = useDroneStore()
+const weaponStore = useWeaponStore()
 const props = defineProps(['index', 'drone'])
 const emit = defineEmits(['updated'])
 
@@ -112,13 +114,18 @@ const filteredMods = computed(() => {
 })
 
 const totalCost = computed(() => {
-    if (mods.value.length === 0)
-        return props.drone.cost;
+    let cost = props.drone.cost;
 
-    const modCosts = mods.value.reduce((prev, cur) =>
-        prev + (props.drone.cost * cur.cost_multiplier),  0);
+    if (mods.value.length > 0) {
+        cost += mods.value.reduce((prev, cur) =>
+            prev + (props.drone.cost * cur.cost_multiplier), 0);
+    }
 
-    return props.drone.cost + modCosts;
+    if (weapons.value.length > 0) {
+        cost += weapons.value.reduce((prev, cur) => prev + cur.cost, 0);
+    }
+
+    return cost;
 })
 
 const canAddItem = (fitting) => {
@@ -126,20 +133,97 @@ const canAddItem = (fitting) => {
     if (!equipped) return true
     return isStackable(fitting.name)
 }
+
+// ===== Weapon state =====
+const weapons = ref([])
+const weaponDialogVisible = ref(false)
+const weaponSearchText = ref('')
+const previewedWeapon = ref(null)
+const weaponAddedThisSession = ref([])
+
+// Weapon tracking
+const equippedWeaponNames = computed(() => new Set(weapons.value.map(w => w.name)))
+const usedHardpoints = computed(() => weapons.value.length)
+const hardpointsAtCapacity = computed(() => usedHardpoints.value >= totalHardpoints.value)
+const tooManyHardpoints = computed(() => usedHardpoints.value > totalHardpoints.value)
+const hardpointSlotDisplay = computed(() => `${usedHardpoints.value}/${totalHardpoints.value}`)
+
+// Weapon size filtering - uses BASE encumbrance, not modified
+const allowedWeaponCategories = computed(() => {
+    const enc = props.drone.encumbrance
+    if (enc === '-') return new Set(['pistol', 'rifle', 'heavy'])
+    const n = parseInt(enc)
+    if (n > 3) return new Set(['pistol', 'rifle'])
+    return new Set(['pistol'])
+})
+
+const availableWeapons = computed(() =>
+    weaponStore.weapons.filter(w => allowedWeaponCategories.value.has(w.category))
+)
+
+const filteredWeaponsByCategory = computed(() => {
+    let items = availableWeapons.value
+    if (weaponSearchText.value.length >= 2) {
+        const q = weaponSearchText.value.toLowerCase()
+        items = items.filter(w =>
+            w.name.toLowerCase().includes(q) ||
+            w.effect_text.toLowerCase().includes(q) ||
+            w.damage.toLowerCase().includes(q) ||
+            w.traits.some(t => t.toLowerCase().includes(q)))
+    }
+    const grouped = {}
+    for (const cat of ['pistol', 'rifle', 'heavy']) {
+        const catItems = items.filter(w => w.category === cat)
+        if (catItems.length > 0) grouped[cat] = catItems
+    }
+    return grouped
+})
+
+const noWeaponResults = computed(() => Object.keys(filteredWeaponsByCategory.value).length === 0)
+
+// Weapon methods
+const selectWeapon = function(weapon) {
+    if (equippedWeaponNames.value.has(weapon.name)) return
+    weapons.value.push(weapon)
+    emit('updated', { index: props.index, cost: totalCost.value })
+    weaponAddedThisSession.value.push(weapon.name)
+    setTimeout(() => {
+        const idx = weaponAddedThisSession.value.indexOf(weapon.name)
+        if (idx !== -1) weaponAddedThisSession.value.splice(idx, 1)
+    }, 600)
+}
+
+const removeWeapon = function(data) {
+    weapons.value.splice(data.index, 1)
+    emit('updated', { index: props.index, cost: totalCost.value })
+}
+
+const previewWeapon = function(weapon) {
+    previewedWeapon.value = previewedWeapon.value?.name === weapon.name ? null : weapon
+}
+
+const openWeaponDialog = function() {
+    weaponSearchText.value = ''
+    previewedWeapon.value = null
+    weaponAddedThisSession.value = []
+    weaponDialogVisible.value = true
+}
 </script>
 
 <template>
     <div class="drone-card">
         <div class="drone-heading">
-            <div class="drone-title">
-                <h3>{{ drone.name }}</h3>
-                <span class="drone-cost">{{ money(totalCost) }}</span>
+            <div class="drone-heading-rows">
+                <div class="drone-title">
+                    <h3>{{ drone.name }}</h3>
+                    <span class="drone-cost">{{ money(totalCost) }}</span>
+                </div>
+                <div class="heading-actions">
+                    <a class="heading-action-btn clickable" @click="openDialog" title="Add Mod/Fitting">+ Mod/Fitting</a>
+                    <a class="heading-action-btn" :class="{ clickable: hasHardpoints, disabled: !hasHardpoints }" @click="hasHardpoints && openWeaponDialog()" title="Add Weapon">+ Weapon</a>
+                </div>
             </div>
-            <div class="heading-actions">
-                <a class="heading-action-btn clickable" @click="openDialog" title="Add Mod/Fitting">+ Mod/Fitting</a>
-                <a class="heading-action-btn" :class="{ clickable: hasHardpoints, disabled: !hasHardpoints }" title="Add Weapon">+ Weapon</a>
-                <a class="remove-btn clickable" @click="$emit('removeDrone', index)" title="Remove">&times;</a>
-            </div>
+            <a class="remove-btn clickable" @click="$emit('removeDrone', index)" title="Remove">&times;</a>
         </div>
         <div class="drone-stats">
             <div class="stat">
@@ -162,9 +246,9 @@ const canAddItem = (fitting) => {
                 <span class="stat-label">Move</span>
                 <span class="stat-value">{{ modifiedMove(drone.move, drone.extraMove ?? 0) }}</span>
             </div>
-            <div class="stat">
+            <div class="stat" :class="{error: tooManyHardpoints}">
                 <span class="stat-label">Hrd.</span>
-                <span class="stat-value">{{ drone.hardpoints }}<span v-if="(drone.extraHardpoints ?? 0) > 0" class="stat-mod">({{ totalHardpoints }})</span></span>
+                <span class="stat-value">{{ usedHardpoints }}/{{ totalHardpoints }}</span>
             </div>
             <div v-if="parseInt(drone.encumbrance)" class="stat">
                 <span class="stat-label">Enc.</span>
@@ -178,129 +262,205 @@ const canAddItem = (fitting) => {
         <div v-if="mods.length" class="drone-mods">
             <ModBlock class="mod-block" v-for="(mod, index) in mods" @remove-mod="removeMod" :fitting="mod" :drone="drone" removable="true" :index="index" />
         </div>
+        <div v-if="weapons.length" class="drone-weapons">
+            <WeaponBlock class="weapon-block" v-for="(weapon, index) in weapons" @remove-weapon="removeWeapon" :weapon="weapon" :drone="drone" removable :index="index" />
+        </div>
 
-        <Dialog v-model:visible="visible" modal :dismissableMask="true" header="Modify Drone" :style="{ width: '75%' }">
-            <!-- Toolbar -->
-            <div class="dialog-toolbar">
-                <div class="search-wrapper">
-                    <InputText v-model="searchText" placeholder="Search mods & fittings..." class="search-input" />
-                    <a v-if="searchText" class="search-clear clickable" @click="searchText = ''" title="Clear search">&times;</a>
+        <!-- Mod/Fitting Dialog -->
+        <ItemPickerDialog v-model:visible="visible" v-model:searchText="searchText" title="Modify Drone">
+            <template #toolbar-pills>
+                <span class="slot-pill" :class="{ 'over-limit': tooManyFittings }">
+                    <span class="slot-label">Fit</span>
+                    <span class="slot-value">{{ addedFittings.length + (drone.extraFittings ?? 0) }}/{{ drone.fittings + (drone.extraMaxFittings ?? 0) }}</span>
+                </span>
+                <span class="slot-pill">
+                    <span class="slot-label">Mods</span>
+                    <span class="slot-value">{{ addedMods.length }}</span>
+                </span>
+            </template>
+
+            <template #item-list>
+                <div class="section-header">Fittings</div>
+                <div v-if="fittingsAtCapacity" class="capacity-warning">
+                    Fitting slots full &mdash; {{ fittingSlotDisplay }}
                 </div>
-                <div class="toolbar-right">
-                    <span class="slot-pill" :class="{ 'over-limit': tooManyFittings }">
-                        <span class="slot-label">Fit</span>
-                        <span class="slot-value">{{ addedFittings.length + (drone.extraFittings ?? 0) }}/{{ drone.fittings + (drone.extraMaxFittings ?? 0) }}</span>
-                    </span>
-                    <span class="slot-pill">
-                        <span class="slot-label">Mods</span>
-                        <span class="slot-value">{{ addedMods.length }}</span>
-                    </span>
-                    <button class="done-btn" @click="visible = false">Done</button>
+                <ModBlock
+                    v-for="fitting in filteredFittings"
+                    :key="'f-' + fitting.name"
+                    compact
+                    :fitting="fitting"
+                    :drone="drone"
+                    :searchText="searchText"
+                    :selected="previewedMod?.name === fitting.name"
+                    :equipped="equippedNames.has(fitting.name)"
+                    :equipCount="equipCounts[fitting.name] || 0"
+                    :stackable="isStackable(fitting.name)"
+                    :class="{ 'mod-just-added': addedThisSession.includes(fitting.name) }"
+                    @click="preview(fitting)"
+                >
+                    <template #add-button>
+                        <button class="row-add-btn" @click.stop="select(fitting)" title="Add">+</button>
+                    </template>
+                </ModBlock>
+
+                <div class="section-header">Mods</div>
+                <ModBlock
+                    v-for="fitting in filteredMods"
+                    :key="'m-' + fitting.name"
+                    compact
+                    :fitting="fitting"
+                    :drone="drone"
+                    :searchText="searchText"
+                    :selected="previewedMod?.name === fitting.name"
+                    :equipped="equippedNames.has(fitting.name)"
+                    :equipCount="equipCounts[fitting.name] || 0"
+                    :stackable="false"
+                    :class="{ 'mod-just-added': addedThisSession.includes(fitting.name) }"
+                    @click="preview(fitting)"
+                >
+                    <template #add-button>
+                        <button class="row-add-btn" @click.stop="select(fitting)" title="Add">+</button>
+                    </template>
+                </ModBlock>
+
+                <div v-if="filteredFittings.length === 0 && filteredMods.length === 0" class="no-results">
+                    No results found
                 </div>
-            </div>
+            </template>
 
-            <!-- Two-column body -->
-            <div class="dialog-body">
-                <!-- Left: compact list -->
-                <div class="mod-list-col">
-                    <!-- Fittings section -->
-                    <div class="section-header">
-                        Fittings
-                    </div>
-                    <div v-if="fittingsAtCapacity" class="capacity-warning">
-                        Fitting slots full &mdash; {{ fittingSlotDisplay }}
-                    </div>
-                    <ModBlock
-                        v-for="fitting in filteredFittings"
-                        :key="'f-' + fitting.name"
-                        compact
-                        :fitting="fitting"
-                        :drone="drone"
-                        :searchText="searchText"
-                        :selected="previewedMod?.name === fitting.name"
-                        :equipped="equippedNames.has(fitting.name)"
-                        :equipCount="equipCounts[fitting.name] || 0"
-                        :stackable="isStackable(fitting.name)"
-                        :class="{ 'mod-just-added': addedThisSession.includes(fitting.name) }"
-                        @click="preview(fitting)"
-                    >
-                        <template #add-button>
-                            <button class="row-add-btn" @click.stop="select(fitting)" title="Add">+</button>
-                        </template>
-                    </ModBlock>
-
-                    <!-- Mods section -->
-                    <div class="section-header">
-                        Mods
-                    </div>
-                    <ModBlock
-                        v-for="fitting in filteredMods"
-                        :key="'m-' + fitting.name"
-                        compact
-                        :fitting="fitting"
-                        :drone="drone"
-                        :searchText="searchText"
-                        :selected="previewedMod?.name === fitting.name"
-                        :equipped="equippedNames.has(fitting.name)"
-                        :equipCount="equipCounts[fitting.name] || 0"
-                        :stackable="false"
-                        :class="{ 'mod-just-added': addedThisSession.includes(fitting.name) }"
-                        @click="preview(fitting)"
-                    >
-                        <template #add-button>
-                            <button class="row-add-btn" @click.stop="select(fitting)" title="Add">+</button>
-                        </template>
-                    </ModBlock>
-
-                    <!-- No results -->
-                    <div v-if="filteredFittings.length === 0 && filteredMods.length === 0" class="no-results">
-                        No results found
-                    </div>
+            <template #detail-panel>
+                <div v-if="!previewedMod" class="detail-empty">
+                    Click an item to view details
                 </div>
-
-                <!-- Right: detail panel -->
-                <div class="mod-detail-col">
-                    <div v-if="!previewedMod" class="detail-empty">
-                        Click an item to view details
-                    </div>
-                    <div v-else class="mod-detail-panel">
-                        <h3 class="mod-detail-name">
-                            {{ previewedMod.name }}
-                            <span class="mod-detail-cost">{{ money(previewedMod.cost_multiplier * drone.cost) }}</span>
-                        </h3>
-                        <div class="mod-detail-meta">
-                            <div class="meta-item">
-                                <span class="meta-label">Type</span>
-                                <span class="meta-value">{{ previewedMod.type }}</span>
-                            </div>
-                            <div class="meta-item">
-                                <span class="meta-label">Cost</span>
-                                <span class="meta-value">{{ Math.round(previewedMod.cost_multiplier * 100) }}% base</span>
-                            </div>
-                            <template v-if="previewedMod.type === 'mod'">
-                                <div class="meta-item">
-                                    <span class="meta-label">Fix</span>
-                                    <span class="meta-value">{{ previewedMod.fix }}</span>
-                                </div>
-                                <div class="meta-item">
-                                    <span class="meta-label">Drive</span>
-                                    <span class="meta-value">{{ previewedMod.drive }}</span>
-                                </div>
-                            </template>
+                <div v-else class="detail-panel">
+                    <h3 class="detail-panel-name">
+                        {{ previewedMod.name }}
+                        <span class="detail-panel-cost">{{ money(previewedMod.cost_multiplier * drone.cost) }}</span>
+                    </h3>
+                    <div class="detail-meta">
+                        <div class="meta-item">
+                            <span class="meta-label">Type</span>
+                            <span class="meta-value">{{ previewedMod.type }}</span>
                         </div>
-                        <p class="mod-detail-effect">{{ previewedMod.effect_text }}</p>
-                        <button
-                            v-if="canAddItem(previewedMod)"
-                            class="add-to-drone-btn"
-                            @click="select(previewedMod)"
-                        >
-                            Add to Drone
-                        </button>
-                        <div v-else class="already-equipped-msg">Already equipped</div>
+                        <div class="meta-item">
+                            <span class="meta-label">Cost</span>
+                            <span class="meta-value">{{ Math.round(previewedMod.cost_multiplier * 100) }}% base</span>
+                        </div>
+                        <template v-if="previewedMod.type === 'mod'">
+                            <div class="meta-item">
+                                <span class="meta-label">Fix</span>
+                                <span class="meta-value">{{ previewedMod.fix }}</span>
+                            </div>
+                            <div class="meta-item">
+                                <span class="meta-label">Drive</span>
+                                <span class="meta-value">{{ previewedMod.drive }}</span>
+                            </div>
+                        </template>
                     </div>
+                    <p class="detail-effect">{{ previewedMod.effect_text }}</p>
+                    <button
+                        v-if="canAddItem(previewedMod)"
+                        class="detail-action-btn"
+                        @click="select(previewedMod)"
+                    >
+                        Add to Drone
+                    </button>
+                    <div v-else class="detail-unavailable-msg">Already equipped</div>
                 </div>
-            </div>
-        </Dialog>
+            </template>
+        </ItemPickerDialog>
+
+        <!-- Weapon Dialog -->
+        <ItemPickerDialog v-model:visible="weaponDialogVisible" v-model:searchText="weaponSearchText" title="Mount Weapon">
+            <template #toolbar-pills>
+                <span class="slot-pill" :class="{ 'over-limit': tooManyHardpoints }">
+                    <span class="slot-label">Hardpoints</span>
+                    <span class="slot-value">{{ hardpointSlotDisplay }}</span>
+                </span>
+            </template>
+
+            <template #item-list>
+                <div v-if="hardpointsAtCapacity" class="capacity-warning">
+                    Hardpoints full &mdash; {{ hardpointSlotDisplay }}
+                </div>
+                <template v-for="cat in ['pistol', 'rifle', 'heavy']" :key="cat">
+                    <template v-if="filteredWeaponsByCategory[cat]">
+                        <div class="section-header">{{ cat }}</div>
+                        <WeaponBlock
+                            v-for="weapon in filteredWeaponsByCategory[cat]"
+                            :key="weapon.name"
+                            compact
+                            :weapon="weapon"
+                            :drone="drone"
+                            :searchText="weaponSearchText"
+                            :selected="previewedWeapon?.name === weapon.name"
+                            :equipped="equippedWeaponNames.has(weapon.name)"
+                            :class="{ 'mod-just-added': weaponAddedThisSession.includes(weapon.name) }"
+                            @click="previewWeapon(weapon)"
+                        >
+                            <template #add-button>
+                                <button class="row-add-btn" @click.stop="selectWeapon(weapon)" title="Mount">+</button>
+                            </template>
+                        </WeaponBlock>
+                    </template>
+                </template>
+
+                <div v-if="noWeaponResults" class="no-results">
+                    No results found
+                </div>
+            </template>
+
+            <template #detail-panel>
+                <div v-if="!previewedWeapon" class="detail-empty">
+                    Click a weapon to view details
+                </div>
+                <div v-else class="detail-panel">
+                    <h3 class="detail-panel-name">
+                        {{ previewedWeapon.name }}
+                        <span class="detail-panel-cost">{{ money(previewedWeapon.cost) }}</span>
+                    </h3>
+                    <div class="detail-meta">
+                        <div class="meta-item">
+                            <span class="meta-label">Damage</span>
+                            <span class="meta-value">{{ previewedWeapon.damage }}</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-label">Range</span>
+                            <span class="meta-value">{{ previewedWeapon.range }}</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-label">Magazine</span>
+                            <span class="meta-value">{{ previewedWeapon.magazine ?? 'N/A' }}</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-label">Category</span>
+                            <span class="meta-value">{{ previewedWeapon.category }}</span>
+                        </div>
+                        <div v-if="previewedWeapon.trauma_die" class="meta-item">
+                            <span class="meta-label">Trauma Die</span>
+                            <span class="meta-value">{{ previewedWeapon.trauma_die }}</span>
+                        </div>
+                        <div v-if="previewedWeapon.trauma_roll" class="meta-item">
+                            <span class="meta-label">Trauma Roll</span>
+                            <span class="meta-value">{{ previewedWeapon.trauma_roll }}</span>
+                        </div>
+                    </div>
+                    <div v-if="previewedWeapon.traits.length" class="weapon-traits">
+                        <span v-for="trait in previewedWeapon.traits" :key="trait" class="weapon-trait-tag">{{ trait }}</span>
+                    </div>
+                    <p class="detail-effect">{{ previewedWeapon.effect_text }}</p>
+                    <button
+                        v-if="!equippedWeaponNames.has(previewedWeapon.name) && !hardpointsAtCapacity"
+                        class="detail-action-btn"
+                        @click="selectWeapon(previewedWeapon)"
+                    >
+                        Mount Weapon
+                    </button>
+                    <div v-else-if="equippedWeaponNames.has(previewedWeapon.name)" class="detail-unavailable-msg">Already mounted</div>
+                    <div v-else class="detail-unavailable-msg">No hardpoints available</div>
+                </div>
+            </template>
+        </ItemPickerDialog>
     </div>
 </template>
 
@@ -319,10 +479,17 @@ const canAddItem = (fitting) => {
     color: var(--cwn-cyan);
     border-left: 3px solid var(--cwn-cyan);
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    padding: 8px 12px;
+    padding: 2px 12px;
     border-radius: 4px 4px 0 0;
+}
+
+.drone-heading-rows {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+    gap: 4px;
 }
 
 .drone-title {
@@ -412,6 +579,7 @@ const canAddItem = (fitting) => {
     display: flex;
     align-items: center;
     gap: 8px;
+    padding: 2px 0 0;
 }
 
 .heading-action-btn {
@@ -438,305 +606,31 @@ const canAddItem = (fitting) => {
     border-color: transparent;
 }
 
-div.p-dialog label {
-    display: block;
+/* Weapons section */
+.drone-weapons {
+    padding: 6px 4px 8px;
 }
 
-/* ===== Dialog overrides ===== */
-:deep(.p-dialog) {
-    background: var(--cwn-bg);
-    border: 1px solid var(--cwn-border);
+.weapon-block {
+    margin-bottom: 2px;
 }
 
-:deep(.p-dialog-header) {
-    background: var(--cwn-bg-mute);
-    color: var(--cwn-cyan);
-    border-bottom: 1px solid var(--cwn-border);
-    padding: 10px 16px;
-    font-size: 0.95em;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
-
-:deep(.p-dialog-content) {
-    background: var(--cwn-bg);
-    padding: 0;
-}
-
-/* ===== Dialog toolbar ===== */
-.dialog-toolbar {
+/* Weapon traits in detail panel */
+.weapon-traits {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 10px 16px;
-    border-bottom: 1px solid var(--cwn-border);
-    background: var(--cwn-bg-soft);
-}
-
-.search-wrapper {
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-}
-
-.search-clear {
-    position: absolute;
-    right: 8px;
-    color: var(--cwn-text-muted);
-    font-size: 1.1em;
-    line-height: 1;
-    padding: 2px 4px;
-    transition: color 0.2s;
-}
-
-.search-clear:hover {
-    color: var(--cwn-text-bright);
-}
-
-.search-wrapper :deep(.p-inputtext) {
-    background: var(--cwn-bg-deep);
-    border: 1px solid var(--cwn-border);
-    color: var(--cwn-text-bright);
-    padding: 6px 28px 6px 12px;
-    font-size: 0.85em;
-    border-radius: 2px;
-    transition: border-color 0.2s, box-shadow 0.2s;
-    width: 260px;
-}
-
-.search-wrapper :deep(.p-inputtext:focus) {
-    border-color: var(--cwn-cyan-dim);
-    box-shadow: var(--cwn-glow-cyan);
-    outline: none;
-}
-
-.search-wrapper :deep(.p-inputtext::placeholder) {
-    color: var(--cwn-text-muted);
-}
-
-.toolbar-right {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.slot-pill {
-    display: flex;
-    align-items: center;
+    flex-wrap: wrap;
     gap: 4px;
-    font-size: 0.7em;
-}
-
-.slot-pill .slot-label {
-    color: var(--cwn-text-muted);
-    text-transform: uppercase;
-    font-size: 0.85em;
-    letter-spacing: 1px;
-}
-
-.slot-pill .slot-value {
-    color: var(--cwn-text-muted);
-}
-
-.slot-pill.over-limit .slot-value {
-    color: var(--cwn-magenta);
-}
-
-.done-btn {
-    border: 1px solid var(--cwn-cyan-dim);
-    color: var(--cwn-cyan);
-    background: transparent;
-    padding: 4px 16px;
-    font-size: 0.8em;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.done-btn:hover {
-    background: rgba(0, 240, 255, 0.15);
-    border-color: var(--cwn-cyan);
-    box-shadow: var(--cwn-glow-cyan);
-}
-
-/* ===== Two-column dialog body ===== */
-.dialog-body {
-    display: flex;
-    min-height: 300px;
-    max-height: 65vh;
-}
-
-.mod-list-col {
-    flex: 1;
-    overflow-y: auto;
-    border-right: 1px solid var(--cwn-border);
-}
-
-.mod-detail-col {
-    width: 320px;
-    min-width: 280px;
-    padding: 16px;
-    display: flex;
-    flex-direction: column;
-    overflow-y: auto;
-}
-
-/* ===== Section headers ===== */
-.section-header {
-    padding: 8px 12px;
-    font-size: 0.7em;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    color: var(--cwn-text-muted);
-    border-bottom: 2px solid var(--cwn-border-hover);
-    background: var(--cwn-bg-soft);
-    position: sticky;
-    top: 0;
-    z-index: 1;
-}
-
-/* ===== Capacity warning ===== */
-.capacity-warning {
-    padding: 4px 12px;
-    font-size: 0.75em;
-    color: var(--cwn-magenta);
-    background: rgba(255, 0, 170, 0.08);
-    border-bottom: 1px solid var(--cwn-magenta-dim);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
-
-/* ===== Row add button ===== */
-.row-add-btn {
-    width: 24px;
-    height: 24px;
-    border: 1px solid var(--cwn-cyan-dim);
-    border-radius: 50%;
-    background: transparent;
-    color: var(--cwn-cyan);
-    font-size: 0.9em;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0;
-    transition: all 0.2s;
-    line-height: 1;
-}
-
-.row-add-btn:hover {
-    background: rgba(0, 240, 255, 0.15);
-    border-color: var(--cwn-cyan);
-    box-shadow: var(--cwn-glow-cyan);
-}
-
-/* ===== No results ===== */
-.no-results {
-    padding: 24px;
-    text-align: center;
-    color: var(--cwn-text-muted);
-    font-size: 0.85em;
-}
-
-/* ===== Detail panel ===== */
-.detail-empty {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 100%;
-    color: var(--cwn-text-muted);
-    font-size: 0.85em;
-}
-
-.mod-detail-panel {
-    background: var(--cwn-bg-mute);
-    border: 1px solid var(--cwn-border);
-    border-radius: 4px;
-    padding: 16px;
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-}
-
-.mod-detail-name {
-    color: var(--cwn-cyan);
-    font-size: 1em;
-    font-weight: bold;
-    margin-bottom: 12px;
-    padding-bottom: 8px;
-    border-bottom: 1px solid var(--cwn-border);
-}
-
-.mod-detail-cost {
-    color: var(--cwn-text-muted);
-    font-size: 0.85em;
-    font-weight: normal;
-    margin-left: 8px;
-}
-
-.mod-detail-meta {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px 16px;
     margin-bottom: 12px;
 }
 
-.meta-item {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-}
-
-.meta-label {
-    color: var(--cwn-text-muted);
+.weapon-trait-tag {
     font-size: 0.7em;
     text-transform: uppercase;
-    letter-spacing: 1px;
-}
-
-.meta-value {
-    color: var(--cwn-text-bright);
-    font-size: 0.9em;
-}
-
-.mod-detail-effect {
-    color: var(--cwn-text);
-    font-size: 0.85em;
-    line-height: 1.5;
-    margin-bottom: 16px;
-    flex: 1;
-}
-
-.add-to-drone-btn {
-    width: 100%;
-    padding: 8px;
-    margin-top: auto;
-    border: 1px solid var(--cwn-cyan);
+    letter-spacing: 0.5px;
+    padding: 2px 6px;
     border-radius: 2px;
-    background: transparent;
-    color: var(--cwn-cyan);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    font-size: 0.8em;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.add-to-drone-btn:hover {
-    background: rgba(0, 240, 255, 0.15);
-    box-shadow: var(--cwn-glow-cyan);
-}
-
-.already-equipped-msg {
-    text-align: center;
-    color: var(--cwn-text-muted);
-    font-size: 0.8em;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    padding: 8px;
-    margin-top: auto;
-    border: 1px solid var(--cwn-border);
-    border-radius: 2px;
+    color: var(--cwn-yellow);
+    border: 1px solid rgba(240, 224, 0, 0.3);
+    background: rgba(240, 224, 0, 0.08);
 }
 </style>
