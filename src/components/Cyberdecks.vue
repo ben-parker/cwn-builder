@@ -274,6 +274,7 @@ watch(() => appMode.sharedPayload, (val) => {
     border-radius: 4px;
     white-space: nowrap;
     min-width: fit-content;
+    min-height: var(--cwn-cost-bar-min-height);
 }
 
 .cost-section {
